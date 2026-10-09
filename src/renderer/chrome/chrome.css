@@ -1,0 +1,1016 @@
+/*
+ * The window frame. Windows draws acrylic (a real blur of the desktop)
+ * behind this transparent page; everything here tints and lights it.
+ */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+}
+
+.frame {
+  --edge: 7px;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--ink-on-glass);
+  background:
+    /* Vista's diagonal light streaks in the glass */
+    repeating-linear-gradient(
+      112deg,
+      rgba(255, 255, 255, 0) 0 70px,
+      rgba(255, 255, 255, 0.055) 70px 86px,
+      rgba(255, 255, 255, 0) 86px 130px,
+      rgba(255, 255, 255, 0.035) 130px 136px,
+      rgba(255, 255, 255, 0) 136px 230px
+    ),
+    /* light falling on the top edge */
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0, rgba(255, 255, 255, 0.08) 64px, rgba(255, 255, 255, 0) 150px),
+    /* the colour of the glass */
+    color-mix(in srgb, var(--frame-tint) calc(var(--frame-alpha) * 100%), rgba(220, 236, 250, 0.25));
+  /* Vista's double edge: a dark outer line and a bright inner one */
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 18, 40, 0.5),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.38);
+  transition: background-color var(--t-med);
+}
+
+.frame.is-opaque {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0, rgba(255, 255, 255, 0.1) 80px, rgba(255, 255, 255, 0) 160px),
+    linear-gradient(180deg, color-mix(in srgb, var(--frame-tint) 70%, #fff), color-mix(in srgb, var(--frame-tint) 82%, #000));
+}
+
+/* Inactive windows: lighter, greyer glass, like Vista. */
+.frame.is-inactive {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0, rgba(255, 255, 255, 0.1) 150px),
+    color-mix(in srgb, color-mix(in srgb, var(--frame-tint) 45%, #9fb0c0) calc(var(--frame-alpha) * 80%), rgba(230, 238, 245, 0.35));
+}
+.frame.is-inactive .tab,
+.frame.is-inactive .navrow,
+.frame.is-inactive .caption {
+  filter: saturate(0.7);
+}
+
+/* InPrivate: a darker, deeper tint (IE8's InPrivate badge spirit). */
+.frame.is-private {
+  --frame-tint: #24335a !important;
+  --frame-alpha: 0.72 !important;
+  color: #fff;
+}
+.frame.is-private .glow-text,
+.frame.is-private .tab:not(.is-active) .tab-title {
+  color: #eef4ff;
+  text-shadow: 0 0 6px rgba(0, 10, 30, 0.9), 0 0 2px rgba(0, 10, 30, 0.9);
+}
+
+.frame.is-maximized {
+  --edge: 0px;
+  box-shadow: none;
+}
+
+.frame.is-immersive {
+  background: #000;
+  box-shadow: none;
+}
+
+/* ---- title row ----------------------------------------------------------- */
+
+.titlebar {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  height: 41px;
+  padding: 0 0 0 6px;
+  -webkit-app-region: drag;
+}
+.frame.is-maximized .titlebar {
+  height: 37px;
+}
+
+.tabrow {
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.orb-button {
+  -webkit-app-region: no-drag;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin: 0 2px 2px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  transition: filter var(--t-fast), transform var(--t-fast);
+  align-self: center;
+}
+.orb-mark {
+  display: inline-block;
+  line-height: 0;
+}
+.orb-mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.orb-button .orb-mark {
+  filter: drop-shadow(0 1px 2px rgba(0, 20, 50, 0.5));
+}
+.orb-button:hover .orb-mark {
+  filter: drop-shadow(0 0 6px rgba(140, 230, 255, 0.95)) drop-shadow(0 1px 2px rgba(0, 20, 50, 0.4)) brightness(1.12);
+}
+.orb-button:active {
+  transform: scale(0.94);
+}
+
+.space-gem {
+  -webkit-app-region: no-drag;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  margin: 0 6px 5px 2px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  align-self: center;
+}
+.space-gem:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.22);
+}
+.space-gem .gem {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0%, var(--gem) 45%, color-mix(in srgb, var(--gem) 60%, #000) 100%);
+  box-shadow:
+    0 0 0 1px rgba(0, 25, 50, 0.45),
+    0 0 6px color-mix(in srgb, var(--gem) 70%, transparent);
+}
+.space-name {
+  font-size: var(--fs-s);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.space-sky { --gem: #39a6ef; }
+.space-sea { --gem: #1bb5b0; }
+.space-leaf { --gem: #62c22e; }
+.space-sun { --gem: #f2b632; }
+.space-rose { --gem: #e2558f; }
+.space-violet { --gem: #8b63e0; }
+.space-graphite { --gem: #7d8a97; }
+
+/* ---- tabs ----------------------------------------------------------------- */
+
+.tabstrip {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding-right: 4px;
+}
+.tabstrip-fill {
+  flex: 1;
+}
+
+.tab {
+  -webkit-app-region: no-drag;
+  --mx: 50%;
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 31px;
+  margin-right: 2px;
+  padding: 0 7px 0 10px;
+  border: 1px solid rgba(0, 25, 50, 0.38);
+  border-bottom: 0;
+  border-radius: 7px 7px 0 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.16) 48%, rgba(255, 255, 255, 0.04) 52%, rgba(255, 255, 255, 0.14) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 1px 0 0 rgba(255, 255, 255, 0.22), inset -1px 0 0 rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+  transition:
+    background var(--t-fast),
+    transform 160ms var(--ease-glass);
+  outline-offset: -3px;
+}
+.tab.is-dragging,
+.tab:not(.is-shifting) {
+  transition: background var(--t-fast);
+}
+.tab.is-shifting {
+  transition: transform 160ms var(--ease-glass);
+}
+.tab.is-dragging {
+  z-index: 3;
+  box-shadow:
+    0 4px 14px rgba(0, 20, 50, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Win7 taskbar hot-track: a glow under the cursor, in the site's colour. */
+.tab-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(70px 30px at var(--mx) 100%, color-mix(in srgb, var(--accent) 85%, #fff) 0%, color-mix(in srgb, var(--accent) 40%, transparent) 45%, transparent 75%);
+  transition: opacity 180ms;
+  mix-blend-mode: screen;
+}
+.tab:hover .tab-glow {
+  opacity: 0.95;
+}
+.tab:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.26) 48%, rgba(255, 255, 255, 0.1) 52%, rgba(255, 255, 255, 0.22) 100%);
+}
+
+/* The active tab is frosted, nearly opaque glass that rests on the nav row. */
+.tab.is-active {
+  z-index: 2;
+  border-color: rgba(0, 25, 50, 0.45);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 251, 255, 0.9) 48%, rgba(231, 242, 251, 0.86) 52%, rgba(236, 245, 252, 0.86) 100%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 -1px 6px rgba(255, 255, 255, 0.45);
+}
+.tab.is-active .tab-glow {
+  mix-blend-mode: multiply;
+  background: radial-gradient(70px 26px at var(--mx) 100%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%);
+}
+.tab.is-split::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 2px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--aqua), var(--life));
+}
+
+.tab-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+.favicon {
+  display: block;
+  border-radius: 2px;
+  image-rendering: auto;
+}
+.favicon.is-dim,
+.tab.is-asleep .favicon {
+  filter: grayscale(0.85) opacity(0.65);
+}
+.tab-warn {
+  color: #c07a00;
+}
+
+.tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: var(--fs-s);
+  color: var(--ink-on-glass);
+  text-shadow:
+    0 0 7px rgba(255, 255, 255, 0.95),
+    0 0 12px rgba(255, 255, 255, 0.75);
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
+}
+.tab.is-active .tab-title {
+  text-shadow: none;
+  color: var(--ink);
+}
+.tab.is-asleep:not(.is-active) .tab-title {
+  color: color-mix(in srgb, var(--ink-on-glass) 70%, transparent);
+}
+
+.tab.is-pinned {
+  justify-content: center;
+  padding: 0;
+}
+.tab.is-compact {
+  padding: 0 4px 0 6px;
+  gap: 4px;
+}
+.tab.is-compact:not(.is-active) .tab-title {
+  display: none;
+}
+.tab.is-compact:not(.is-active) {
+  justify-content: center;
+}
+
+.tab-close,
+.tab-audio {
+  -webkit-app-region: no-drag;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+}
+.tab-close {
+  opacity: 0;
+}
+.tab:hover .tab-close,
+.tab.is-active .tab-close,
+.tab:focus-within .tab-close {
+  opacity: 1;
+}
+.tab-close:hover {
+  color: #fff;
+  border-color: #8d2a20;
+  background: linear-gradient(180deg, #f08a72 0%, #d9472d 50%, #c4301c 51%, #db5a3c 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.tab-audio:hover {
+  border-color: var(--sel-hover-edge);
+  background: var(--sel-hover-bg);
+}
+
+.newtab-button {
+  -webkit-app-region: no-drag;
+  flex: none;
+  width: 30px;
+  height: 24px;
+  margin: 0 0 3px 2px;
+  padding: 0;
+  border: 1px solid rgba(0, 25, 50, 0.35);
+  border-radius: 5px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.05) 51%, rgba(255, 255, 255, 0.2) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: var(--ink-on-glass);
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+}
+.newtab-button:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(214, 240, 255, 0.45) 50%, rgba(160, 215, 250, 0.4) 51%, rgba(190, 230, 255, 0.55) 100%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 0 8px rgba(130, 210, 255, 0.8);
+}
+
+/* ---- caption buttons: Vista's set, hung from the top edge ------------------ */
+
+.caption {
+  -webkit-app-region: no-drag;
+  align-self: flex-start;
+  display: flex;
+  margin: 1px 8px 0 10px;
+  border: 1px solid rgba(0, 18, 40, 0.6);
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 6px rgba(255, 255, 255, 0.35);
+}
+.frame.is-maximized .caption {
+  margin-top: 0;
+  margin-right: 2px;
+}
+.cap {
+  position: relative;
+  height: 20px;
+  width: 28px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid rgba(0, 18, 40, 0.45);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.04) 51%, rgba(255, 255, 255, 0.18) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.cap svg {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
+}
+.cap:first-child {
+  border-left: 0;
+}
+.cap:hover {
+  background: linear-gradient(180deg, rgba(220, 245, 255, 0.85) 0%, rgba(120, 200, 245, 0.7) 50%, rgba(50, 150, 220, 0.75) 51%, rgba(110, 220, 255, 0.85) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    inset 0 -6px 10px rgba(150, 240, 255, 0.8);
+}
+.cap-close {
+  width: 46px;
+  background: linear-gradient(180deg, #e9a99c 0%, #d2735f 50%, #c0452b 51%, #d8694c 100%);
+}
+.cap-close:hover {
+  background: linear-gradient(180deg, #ffc1ae 0%, #f0806a 50%, #e43d1a 51%, #ff7a3d 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    inset 0 -6px 12px rgba(255, 200, 120, 0.9),
+    0 0 10px rgba(255, 90, 50, 0.9);
+}
+.cap:active {
+  filter: brightness(0.85);
+}
+
+/* ---- navigation row (on glass, like Vista Explorer) -------------------------- */
+
+.navrow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 calc(var(--edge) + 3px) 0 calc(var(--edge) + 2px);
+  background: linear-gradient(180deg, rgba(236, 245, 252, 0.88) 0%, rgba(220, 235, 248, 0.82) 100%);
+  border-top: 1px solid rgba(0, 25, 50, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  -webkit-app-region: drag;
+}
+.navrow > * {
+  -webkit-app-region: no-drag;
+}
+
+.nav-orbs {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+.nav-orb {
+  position: relative;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #0f3f7a;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.25) 45%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(90% 70% at 50% 100%, #7fe0ff 0%, rgba(127, 224, 255, 0) 70%),
+    linear-gradient(180deg, #3d8fe0 0%, #1d5fb6 55%, #194f9a 100%);
+  box-shadow:
+    0 1px 3px rgba(0, 25, 60, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  transition: filter var(--t-fast), box-shadow var(--t-fast);
+}
+.nav-orb svg {
+  filter: drop-shadow(0 1px 1px rgba(0, 20, 60, 0.8));
+}
+.nav-orb.is-back {
+  width: 32px;
+  height: 32px;
+  z-index: 1;
+}
+.nav-orb.is-forward {
+  width: 27px;
+  height: 27px;
+  margin-left: -3px;
+}
+.nav-orb:hover:not(:disabled) {
+  filter: brightness(1.12) saturate(1.1);
+  box-shadow:
+    0 0 10px rgba(110, 210, 255, 0.95),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+.nav-orb:active:not(:disabled) {
+  filter: brightness(0.9);
+}
+.nav-orb:disabled {
+  border-color: rgba(60, 80, 100, 0.45);
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.3) 45%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(180deg, #c8d2db 0%, #a9b6c2 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.glass-btn {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-soft);
+  display: grid;
+  place-items: center;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.glass-btn.small {
+  width: 24px;
+  height: 22px;
+}
+.glass-btn:hover {
+  border-color: var(--sel-hover-edge);
+  background: var(--sel-hover-bg);
+  box-shadow: var(--sel-inset);
+  color: var(--ink);
+}
+.glass-btn:active,
+.glass-btn.is-on {
+  border-color: var(--sel-edge);
+  background: var(--sel-bg);
+  box-shadow: var(--sel-inset);
+  color: var(--aqua-deep);
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.shield-btn.is-on {
+  color: var(--aqua-deep);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.shield-btn.is-on svg {
+  fill: rgba(47, 157, 227, 0.22);
+}
+.shield-btn.is-on:hover {
+  border-color: var(--sel-hover-edge);
+  background: var(--sel-hover-bg);
+}
+.badge {
+  position: absolute;
+  right: -1px;
+  bottom: 0;
+  min-width: 15px;
+  height: 13px;
+  padding: 0 3px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 13px;
+  color: #fff;
+  text-align: center;
+  background: linear-gradient(180deg, #5bbcf5, #1f74c8);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+
+.downloads-btn .progress-ring {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 28px;
+  height: 28px;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+.progress-ring circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+.progress-ring .track {
+  stroke: rgba(20, 90, 158, 0.15);
+}
+.progress-ring .bar {
+  stroke: var(--life);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 300ms;
+}
+.progress-ring.is-indeterminate {
+  animation: busy 1.1s linear infinite;
+}
+
+/* ---- the omnibox --------------------------------------------------------------- */
+
+.omnibox {
+  position: relative;
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 2px 0 3px;
+  border: 1px solid #7a95ad;
+  border-top-color: #5f7a93;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 30, 60, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.omnibox:hover {
+  border-color: #4f8bc4;
+}
+.omnibox.is-focused {
+  border-color: #3d8ee0;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 30, 60, 0.12),
+    0 0 0 2px rgba(61, 142, 224, 0.22);
+}
+/* Windows 7 Explorer filled its address bar green while loading. */
+.omnibox-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--progress) * 100%);
+  background: linear-gradient(180deg, rgba(178, 236, 140, 0.55) 0%, rgba(126, 211, 84, 0.42) 50%, rgba(96, 196, 60, 0.36) 51%, rgba(150, 226, 110, 0.45) 100%);
+  opacity: calc(var(--progress) * 4);
+  transition: width 260ms linear, opacity 300ms;
+  pointer-events: none;
+}
+.omnibox.sec-error {
+  border-color: #c0392b;
+  background: linear-gradient(180deg, #fff3f1, #ffe4df);
+}
+
+.site-chip {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0 5px;
+  margin-right: 2px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: var(--fs-s);
+  white-space: nowrap;
+  justify-content: center;
+}
+button.site-chip:hover {
+  border-color: var(--sel-hover-edge);
+  background: var(--sel-hover-bg);
+}
+.site-chip.is-secure {
+  color: #2e7d22;
+}
+.site-chip.is-insecure,
+.site-chip.is-error {
+  color: #b3261e;
+}
+.site-chip.is-insecure span,
+.site-chip.is-error span {
+  font-weight: 600;
+}
+.site-chip.is-internal {
+  color: var(--aqua-deep);
+}
+.site-chip.is-internal span,
+.site-chip.is-file span {
+  padding-right: 4px;
+  border-right: 1px solid var(--hairline);
+}
+
+.omnibox-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+.omnibox-input {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0 4px;
+  background: transparent;
+  font-size: var(--fs-m);
+  color: var(--ink);
+  outline: none;
+  user-select: text;
+}
+.omnibox-input::placeholder {
+  color: #8496a7;
+}
+.omnibox-input::selection {
+  background: #3399ff;
+  color: #fff;
+}
+.omnibox-display {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  font-size: var(--fs-m);
+  white-space: nowrap;
+  overflow: hidden;
+  background: #fff;
+  cursor: text;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+}
+.omnibox:has(.omnibox-progress) .omnibox-display {
+  background: transparent;
+}
+.omnibox-display .host {
+  color: var(--ink);
+}
+.omnibox-display .dim {
+  color: #7f8f9e;
+}
+
+.field-btn {
+  flex: none;
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-faint);
+  display: grid;
+  place-items: center;
+}
+.field-btn:hover {
+  border-color: var(--sel-hover-edge);
+  background: var(--sel-hover-bg);
+  color: var(--ink);
+}
+.star-btn.is-on {
+  color: #b77a06;
+}
+.star-btn.is-on svg {
+  fill: #f6c544;
+  stroke: #b47a05;
+}
+.field-divider {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: var(--hairline-strong);
+}
+.reload-btn {
+  color: var(--aqua-deep);
+}
+.zoom-chip {
+  flex: none;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--sel-hover-edge);
+  border-radius: 10px;
+  background: var(--sel-hover-bg);
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
+}
+
+/* ---- Favorites bar: Vista's glossy command bar --------------------------------- */
+
+.favbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  height: 29px;
+  padding: 0 calc(var(--edge) + 4px);
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, #f9fcff 0%, #e8f2fb 49%, #d6e6f5 50%, #dfecf8 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #8fa9c2;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.favbar-star {
+  flex: none;
+  margin-right: 5px;
+  color: #b77a06;
+  fill: #f6c544;
+}
+.favbar-empty {
+  color: var(--ink-faint);
+  font-size: var(--fs-s);
+}
+.fav-item {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 180px;
+  height: 23px;
+  padding: 0 7px 0 5px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--fs-s);
+}
+.fav-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fav-item:hover {
+  border-color: var(--sel-hover-edge);
+  background: var(--sel-hover-bg);
+  box-shadow: var(--sel-inset);
+}
+.fav-item:active {
+  border-color: var(--sel-edge);
+  background: var(--sel-bg);
+}
+.fav-item.is-overflow {
+  visibility: hidden;
+  position: absolute;
+  pointer-events: none;
+}
+.fav-item.is-drop {
+  box-shadow: inset 2px 0 0 var(--aqua);
+}
+.fav-chev {
+  flex: none;
+  color: var(--ink-faint);
+}
+.fav-more {
+  margin-left: auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 23px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-soft);
+}
+.fav-more:hover {
+  border-color: var(--sel-hover-edge);
+  background: var(--sel-hover-bg);
+}
+
+/* ---- find bar ---------------------------------------------------------------------------- */
+
+.findbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 calc(var(--edge) + 6px);
+  background: linear-gradient(180deg, #fbfdff, #eaf2f9);
+  border-bottom: 1px solid #a9bfd3;
+}
+.findbar-icon {
+  color: var(--ink-faint);
+}
+.findbar-input {
+  width: 240px;
+}
+.findbar-count {
+  min-width: 76px;
+  color: var(--ink-soft);
+}
+.findbar-count.is-none {
+  color: var(--alert);
+}
+
+/* ---- viewport ------------------------------------------------------------------------------ */
+
+.viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 var(--edge);
+  /* The web view sits on top of this; what shows is the Vista client edge. */
+  background: #fff;
+  outline: 1px solid rgba(0, 18, 40, 0.55);
+}
+.frame.is-immersive .viewport {
+  margin: 0;
+  outline: 0;
+}
+.frame:not(:has(.statusbar)) .viewport {
+  margin-bottom: var(--edge);
+}
+
+.split-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  background:
+    linear-gradient(90deg, rgba(0, 25, 50, 0.35), rgba(255, 255, 255, 0.5) 30%, rgba(210, 228, 244, 0.9) 50%, rgba(255, 255, 255, 0.5) 70%, rgba(0, 25, 50, 0.35));
+}
+.split-divider:hover,
+.split-divider.is-dragging {
+  background: linear-gradient(90deg, rgba(0, 60, 120, 0.4), #9fd6ff 30%, #e6f5ff 50%, #9fd6ff 70%, rgba(0, 60, 120, 0.4));
+}
+.split-grip {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 4px;
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(180deg, rgba(20, 60, 100, 0.55) 0 2px, transparent 2px 5px);
+}
+
+.crash-panel {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #f4f8fc, #e4eef7);
+}
+.crash-card {
+  display: flex;
+  gap: 16px;
+  max-width: 520px;
+  padding: 22px 26px;
+}
+.crash-icon {
+  flex: none;
+  color: #d08a00;
+}
+.crash-card h1 {
+  margin: 4px 0 8px;
+  font-size: var(--fs-l);
+  font-weight: 400;
+  color: var(--heading);
+}
+.crash-card p {
+  margin: 0 0 16px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.crash-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- status bar ------------------------------------------------------------------------------ */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 25px;
+  padding: 0 calc(var(--edge) + 6px);
+  font-size: var(--fs-xs);
+}
+.status-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-cells {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 19px;
+  padding: 0 7px;
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.45);
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-xs);
+  text-shadow: inherit;
+}
+button.status-cell:hover {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+}
