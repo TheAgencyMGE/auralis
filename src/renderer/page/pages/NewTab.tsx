@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { WALLPAPERS, SEARCH_ENGINES, type WallpaperId, type Settings } from '@shared/settings'
 import { call, useSettings } from '@ui/api'
 import { Favicon, Icon } from '@ui/icons'
-import { WeatherArt, weatherInfo } from '../weather-art'
-import { Ambient } from '../ambient'
-import { AquariumGadget } from '../aquarium'
+import { weatherInfo } from '../weather'
 
 interface Site {
   url: string
@@ -37,9 +35,7 @@ function PrivateTab() {
       <div className="ntp-shade" />
       <main className="ntp-main">
         <div className="private-card">
-          <span className="private-badge">
-            <Icon name="private" size={30} />
-          </span>
+          <img className="private-art" src="/emoji/detective.webp" width={64} height={64} alt="" />
           <h1>You’re browsing InPrivate</h1>
           <p>When you close every InPrivate window, Auralis forgets the pages you visited, cookies, site data and anything you typed into forms in this window.</p>
           <p>Files you download and favorites you add are kept. Your internet provider, employer or school, and the sites you visit, can still see what you do.</p>
@@ -57,7 +53,7 @@ function NormalTab() {
   const [picker, setPicker] = useState(false)
   const [customize, setCustomize] = useState(false)
   const wp = WALLPAPERS[s.wallpaper]
-  const hasGadgets = s.widgets.weather || s.widgets.notes || s.widgets.meter || s.widgets.aquarium
+  const hasGadgets = s.widgets.weather || s.widgets.notes || s.widgets.meter
 
   useEffect(() => {
     document.title = 'New Tab'
@@ -77,7 +73,6 @@ function NormalTab() {
     <div className={`ntp tone-${wp.tone}${hasGadgets ? '' : ' no-sidebar'}`}>
       <div className="ntp-wall" style={{ backgroundImage: `url(/wallpapers/${s.wallpaper}.webp)` }} />
       <div className="ntp-shade" />
-      <Ambient wallpaper={s.wallpaper} enabled={s.ambientEffects} sound={s.aeroSounds} />
 
       <main className="ntp-main">
         {s.widgets.clock && (
@@ -95,7 +90,6 @@ function NormalTab() {
       {hasGadgets && (
       <aside className="sidebar" aria-label="Gadgets">
         {s.widgets.weather && <WeatherGadget settings={s} />}
-        {s.widgets.aquarium && <AquariumGadget sound={s.aeroSounds} />}
         {s.widgets.notes && <NotesGadget initial={s.notes} />}
         {s.widgets.meter && <MeterGadget />}
       </aside>
@@ -233,7 +227,7 @@ function WeatherGadget({ settings }: { settings: Settings }) {
   return (
     <section className="gadget weather" aria-label={`Weather in ${data.location}`}>
       <div className="w-now">
-        <WeatherArt code={c.weather_code} day={!!c.is_day} size={74} />
+        <img className="weather-art" src={info.art} width={74} height={74} alt="" />
         <div className="w-temp">
           {Math.round(c.temperature_2m)}
           <span>°</span>
@@ -252,7 +246,7 @@ function WeatherGadget({ settings }: { settings: Settings }) {
           {data.daily.time.slice(1, 5).map((d, i) => (
             <div key={d} className="w-day">
               <span>{new Date(d + 'T12:00').toLocaleDateString([], { weekday: 'short' })}</span>
-              <WeatherArt code={data.daily!.weather_code[i + 1]} day size={26} />
+              <img className="weather-art" src={weatherInfo(data.daily!.weather_code[i + 1]).art} width={26} height={26} alt="" />
               <span className="w-hi">{Math.round(data.daily!.temperature_2m_max[i + 1])}°</span>
               <span className="w-lo">{Math.round(data.daily!.temperature_2m_min[i + 1])}°</span>
             </div>
@@ -341,10 +335,8 @@ function MeterGadget() {
   const memPct = Math.min(100, ((m?.memoryMB ?? 0) / 4096) * 100)
   return (
     <section className="gadget meter" aria-label="Browser meter">
-      <div className="dials">
-        <Dial value={cpu} label={`${Math.round(cpu)}%`} caption="CPU" />
-        <Dial value={memPct} label={m ? (m.memoryMB >= 1024 ? `${(m.memoryMB / 1024).toFixed(1)}G` : `${m.memoryMB}M`) : '–'} caption="Memory" small />
-      </div>
+      <Bar label="CPU" value={cpu} text={`${Math.round(cpu)}%`} />
+      <Bar label="Memory" value={memPct} text={m ? (m.memoryMB >= 1024 ? `${(m.memoryMB / 1024).toFixed(1)} GB` : `${m.memoryMB} MB`) : '–'} />
       <div className="meter-facts">
         <span>{m?.tabs ?? 0} tabs</span>
         <span>{m?.sleeping ?? 0} asleep</span>
@@ -354,32 +346,15 @@ function MeterGadget() {
   )
 }
 
-/** A Vista CPU-meter dial. */
-function Dial({ value, label, caption, small }: { value: number; label: string; caption: string; small?: boolean }) {
-  const angle = -120 + (Math.max(0, Math.min(100, value)) / 100) * 240
-  const size = small ? 70 : 92
+/** A labelled Vista progress bar. */
+function Bar({ label, value, text }: { label: string; value: number; text: string }) {
   return (
-    <div className={`dial${small ? ' is-small' : ''}`} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden>
-        <defs>
-          <radialGradient id={`dial-face-${caption}`} cx="50%" cy="35%" r="70%">
-            <stop offset="0" stopColor="#3a4048" />
-            <stop offset="1" stopColor="#0b0d10" />
-          </radialGradient>
-        </defs>
-        <circle cx="50" cy="50" r="48" fill={`url(#dial-face-${caption})`} stroke="#9aa4ae" strokeWidth="2" />
-        {Array.from({ length: 13 }, (_, i) => {
-          const a = ((-120 + i * 20) * Math.PI) / 180
-          return <line key={i} x1={50 + Math.sin(a) * 36} y1={50 - Math.cos(a) * 36} x2={50 + Math.sin(a) * 42} y2={50 - Math.cos(a) * 42} stroke={i > 9 ? '#ff6a4d' : '#9fe07a'} strokeWidth={i % 2 ? 1 : 2} />
-        })}
-        <g style={{ transform: `rotate(${angle}deg)`, transformOrigin: '50px 50px', transition: 'transform 700ms cubic-bezier(.2,.9,.3,1.2)' }}>
-          <path d="M50 14 L52.4 50 L47.6 50 Z" fill="#ff5a3a" />
-        </g>
-        <circle cx="50" cy="50" r="6" fill="#d9dee3" stroke="#59616a" />
-        <ellipse cx="50" cy="28" rx="38" ry="20" fill="rgba(255,255,255,.12)" />
-      </svg>
-      <span className="dial-label">{label}</span>
-      <span className="dial-caption">{caption}</span>
+    <div className="meter-row">
+      <span className="meter-label">{label}</span>
+      <span className="meter-bar">
+        <span style={{ width: `${Math.max(2, Math.min(100, value))}%` }} />
+      </span>
+      <span className="meter-value">{text}</span>
     </div>
   )
 }
@@ -413,7 +388,6 @@ function GadgetPicker({ s, onClose }: { s: Settings; onClose: () => void }) {
     { key: 'topSites', label: 'Frequently visited sites' },
     { key: 'weather', label: 'Weather' },
     { key: 'notes', label: 'Notes' },
-    { key: 'aquarium', label: 'Aquarium' },
     { key: 'meter', label: 'Browser meter' }
   ]
   return (
@@ -430,10 +404,6 @@ function GadgetPicker({ s, onClose }: { s: Settings; onClose: () => void }) {
           <input type="checkbox" className="toggle" checked={s.widgets[it.key]} onChange={(e) => void call('settings.set', { widgets: { [it.key]: e.target.checked } })} />
         </label>
       ))}
-      <label className="gp-row">
-        <span>Bubbles and light</span>
-        <input type="checkbox" className="toggle" checked={s.ambientEffects} onChange={(e) => void call('settings.set', { ambientEffects: e.target.checked })} />
-      </label>
       <label className="gp-row">
         <span>Aero sounds</span>
         <input type="checkbox" className="toggle" checked={s.aeroSounds} onChange={(e) => void call('settings.set', { aeroSounds: e.target.checked })} />

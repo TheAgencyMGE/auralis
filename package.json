@@ -14,10 +14,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "node scripts/test-unit.mjs",
     "test:e2e": "npm run build && playwright test",
-    "icons": "node scripts/build-icons.mjs",
     "dist": "npm run typecheck && npm test && npm run build && node scripts/notices.mjs && electron-builder --win --x64",
     "dist:dir": "npm run build && node scripts/notices.mjs && electron-builder --win --x64 --dir",
-    "notices": "node scripts/notices.mjs"
+    "notices": "node scripts/notices.mjs",
+    "fetch-assets": "node scripts/fetch-icons.mjs && node scripts/fetch-emoji.mjs"
   },
   "dependencies": {
     "@ghostery/adblocker-electron": "2.18.2"

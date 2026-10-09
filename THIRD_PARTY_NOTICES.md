@@ -37,12 +37,17 @@ photo service.
   CC BY-SA 3.0; uBlock Origin resources, GPLv3). The lists are downloaded, not
   distributed with Auralis.
 
-## Icons, artwork and fonts
+## Icons, artwork and sounds
 
-The Auralis orb, interface glyphs, weather illustrations, gadget artwork,
-aquarium fish and bubble effects were drawn for Auralis, and its interface
-sounds are synthesized at runtime; all and are covered by its MIT License. Text is set in Segoe UI,
-which is part of Windows and is not distributed with Auralis.
+- Interface icons: Fluent UI System Icons, Copyright (c) 2020 Microsoft
+  Corporation, MIT License — https://github.com/microsoft/fluentui-system-icons
+- 3D artwork (globe logo and app icon, folder, weather, page headers): Fluent
+  Emoji, Copyright (c) Microsoft Corporation, MIT License —
+  https://github.com/microsoft/fluentui-emoji
+- Sounds: Interface Sounds by Kenney (www.kenney.nl), CC0 1.0 —
+  https://kenney.nl/assets/interface-sounds
+- Text is set in Segoe UI, which is part of Windows and is not distributed
+  with Auralis.
 
 # Software packages
 

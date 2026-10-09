@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { call } from '@ui/api'
-import { Icon } from '@ui/icons'
 
 interface Info {
   type: 'network' | 'cert' | 'https' | 'crash' | 'blocked'
@@ -75,9 +74,7 @@ export default function ErrorPage() {
   return (
     <div className="errp">
       <div className="errp-head">
-        <span className={`errp-icon${e.warn ? ' is-warn' : ''}`}>
-          <Icon name={e.warn ? 'warning' : 'globe'} size={28} />
-        </span>
+        <img className="errp-art" src={`/emoji/${e.warn ? 'warning' : 'globe'}.webp`} alt="" />
         <div>
           <h1>{e.title}</h1>
           <p className="errp-lede">{e.lede}</p>

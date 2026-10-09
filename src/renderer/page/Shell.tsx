@@ -12,6 +12,9 @@ const PAGES = [
   { host: 'about', label: 'About Auralis', icon: 'info' }
 ]
 
+/** Page header art: Fluent Emoji 3D (MIT, Microsoft). */
+const ART: Record<string, string> = { settings: 'gear', star: 'star', history: 'clock', download: 'inbox', gauge: 'chart', info: 'info' }
+
 export function Shell({
   icon,
   title,
@@ -48,9 +51,13 @@ export function Shell({
       </aside>
       <main className="cp-main">
         <header className="cp-head">
-          <span className="cp-head-icon">
-            <Icon name={icon} size={26} />
-          </span>
+          {ART[icon] ? (
+            <img className="cp-head-art" src={`/emoji/${ART[icon]}.webp`} alt="" />
+          ) : (
+            <span className="cp-head-icon">
+              <Icon name={icon} size={26} />
+            </span>
+          )}
           <div>
             <h1>{title}</h1>
             {subtitle && <p>{subtitle}</p>}

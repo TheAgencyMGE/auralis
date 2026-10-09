@@ -171,15 +171,7 @@ function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: Se
   const editing = useRef(false)
   const shownUrl = active ? (active.isNewTab ? '' : displayUrl(active.url)) : ''
   const progress = useFakeProgress(!!active?.loading, active?.id)
-  // A burst of sparkles the moment a page becomes a favorite.
-  const [sparkle, setSparkle] = useState(0)
-  const wasStarred = useRef<{ id: number | null; on: boolean }>({ id: null, on: false })
-  useEffect(() => {
-    const on = !!active?.bookmarked
-    const prev = wasStarred.current
-    if (prev.id === (active?.id ?? null) && on && !prev.on) setSparkle((n) => n + 1)
-    wasStarred.current = { id: active?.id ?? null, on }
-  }, [active?.id, active?.bookmarked])
+
 
   // Follow the page while the user isn't editing.
   useEffect(() => {
@@ -327,13 +319,12 @@ function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: Se
       {active && !active.isNewTab && /^(https?|file):/.test(active.url) && (
         <button
           ref={setAnchor('star')}
-          key={`star-${sparkle}`}
-          className={`field-btn star-btn${active.bookmarked ? ' is-on' : ''}${sparkle ? ' is-sparkling' : ''}`}
+          className={`field-btn star-btn${active.bookmarked ? ' is-on' : ''}`}
           title={active.bookmarked ? 'Edit favorite (Ctrl+D)' : 'Add to Favorites (Ctrl+D)'}
           aria-label={active.bookmarked ? 'Edit favorite' : 'Add to Favorites'}
           onClick={(e) => void call('menu.bookmarkStar', rectOf(e.currentTarget))}
         >
-          <Icon name="star" />
+          <Icon name={active.bookmarked ? 'star-filled' : 'star'} />
         </button>
       )}
       <span className="field-divider" />

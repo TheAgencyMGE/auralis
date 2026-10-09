@@ -133,11 +133,6 @@ body,
   display: inline-block;
   line-height: 0;
 }
-.orb-mark svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
 .orb-button .orb-mark {
   filter: drop-shadow(0 1px 2px rgba(0, 20, 50, 0.5));
 }
@@ -776,8 +771,7 @@ button.site-chip:hover {
   color: #b77a06;
 }
 .star-btn.is-on svg {
-  fill: #f6c544;
-  stroke: #b47a05;
+  color: #e8a90c;
 }
 .field-divider {
   flex: none;
@@ -1034,68 +1028,25 @@ button.status-cell:hover {
     0 0 0 2px rgba(120, 210, 255, 0.8);
 }
 
-/* Favorite added: the star glints and throws off four sparkles. */
-.star-btn {
-  position: relative;
-  overflow: visible;
+/* Fluent glyphs are drawn finer than the old ones: give them a little more
+   size and full-strength ink so they hold up on glass. */
+.glass-btn svg,
+.field-btn svg {
+  width: 18px;
+  height: 18px;
 }
-.star-btn.is-sparkling svg {
-  animation: star-pop 520ms var(--ease-glass);
+.glass-btn {
+  color: var(--ink);
 }
-.star-btn.is-sparkling::before,
-.star-btn.is-sparkling::after {
-  content: '';
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: 4px;
-  height: 4px;
-  margin: -2px 0 0 -2px;
-  border-radius: 50%;
-  background: #fff6c2;
-  box-shadow:
-    0 0 6px 2px rgba(255, 220, 90, 0.9);
-  animation: spark-a 600ms ease-out forwards;
-  pointer-events: none;
-}
-.star-btn.is-sparkling::after {
-  animation-name: spark-b;
-}
-@keyframes star-pop {
-  40% {
-    transform: scale(1.35) rotate(12deg);
-    filter: drop-shadow(0 0 6px rgba(255, 210, 60, 0.95));
-  }
-}
-@keyframes spark-a {
-  to {
-    transform: translate(-13px, -11px) scale(0.2);
-    box-shadow: 13px 22px 6px 1px rgba(255, 220, 90, 0), 26px 0 6px 1px rgba(160, 230, 255, 0);
-    opacity: 0;
-  }
-}
-@keyframes spark-b {
-  to {
-    transform: translate(13px, -12px) scale(0.2);
-    box-shadow: -26px 24px 6px 1px rgba(160, 230, 255, 0);
-    opacity: 0;
-  }
+.cap svg {
+  width: 15px;
+  height: 15px;
+  color: #fff;
+  filter: drop-shadow(0 0 1px rgba(0, 10, 30, 1)) drop-shadow(0 0 1px rgba(0, 10, 30, 0.9)) drop-shadow(0 1px 2px rgba(0, 10, 30, 0.6));
 }
 
-/* An aurora ribbon of light in the glass behind the tabs: the Vista
-   "Aurora" swoosh and the borealis photographs Frutiger Aero loved. */
-.frame:not(.is-immersive)::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 120px;
-  pointer-events: none;
-  background:
-    radial-gradient(60% 70% at 78% -10%, rgba(140, 255, 210, 0.22), rgba(140, 255, 210, 0) 70%),
-    radial-gradient(40% 60% at 98% 20%, rgba(120, 220, 255, 0.18), rgba(120, 220, 255, 0) 70%),
-    radial-gradient(30% 45% at 60% -20%, rgba(200, 255, 140, 0.12), rgba(200, 255, 140, 0) 70%);
-  mix-blend-mode: screen;
-}
-.frame.is-inactive::before,
-.frame.is-private::before {
-  opacity: 0.4;
+/* Spaces button: Fluent's grid glyph in the space's colour (no drawn gem). */
+.space-gem .space-icon {
+  color: color-mix(in srgb, var(--gem) 75%, #0b2a4a);
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.95));
 }

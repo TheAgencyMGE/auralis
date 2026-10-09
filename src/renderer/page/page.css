@@ -267,6 +267,9 @@ html[data-page='newtab'] body {
   backdrop-filter: blur(14px);
   animation: rise 600ms 120ms var(--ease-glass) both;
 }
+.private-art {
+  display: block;
+}
 .private-card h1 {
   margin: 10px 0 10px;
   font-family: var(--font-light);
@@ -278,17 +281,7 @@ html[data-page='newtab'] body {
   line-height: 1.55;
   color: rgba(238, 242, 255, 0.88);
 }
-.private-badge {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background:
-    radial-gradient(120% 60% at 50% 0%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0) 52%),
-    linear-gradient(180deg, #6b5ad6, #2a2d7a);
-  box-shadow: 0 2px 8px rgba(0, 0, 30, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
-}
+
 
 /* ---- the Sidebar --------------------------------------------------------------- */
 
@@ -474,35 +467,11 @@ html[data-page='newtab'] body {
     0 0 0 1px rgba(0, 0, 0, 0.6),
     0 8px 22px rgba(0, 10, 25, 0.45);
 }
-.dials {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 2px;
-}
-.dial {
-  position: relative;
-}
-.dial-label {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 22%;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: #c8f5a8;
-}
-.dial.is-small .dial-label {
-  font-size: 10px;
-}
-.dial-caption {
-  display: block;
-  text-align: center;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 2px;
-}
+
+
+
+
+
 .meter-facts {
   display: flex;
   justify-content: space-between;
@@ -1334,13 +1303,7 @@ th .link-like {
 
 /* ---- Frutiger Aero: living water, glass gadgets, wet floors ---- */
 
-.ntp-ambient {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
+
 
 /* Web 2.0 "wet floor": every jewel sits on a reflection of itself. */
 .tile-jewel {
@@ -1350,36 +1313,6 @@ th .link-like {
   -webkit-box-reflect: below 2px linear-gradient(transparent 70%, rgba(255, 255, 255, 0.16));
 }
 
-/* Aquarium: a glass tank with a polished rim and a band of reflected light. */
-.aquarium {
-  position: relative;
-  padding: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.05) 51%, rgba(255, 255, 255, 0.2) 100%),
-    rgba(30, 110, 160, 0.4);
-  box-shadow:
-    0 0 0 1px rgba(0, 20, 45, 0.45),
-    0 8px 22px rgba(0, 20, 45, 0.35);
-}
-.aquarium .tank {
-  display: block;
-  border-radius: 5px;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-    0 0 0 1px rgba(0, 30, 60, 0.6);
-  cursor: pointer;
-}
-.aquarium::after {
-  content: '';
-  position: absolute;
-  inset: 8px 8px auto 8px;
-  height: 46%;
-  border-radius: 5px 5px 40% 40% / 5px 5px 18px 18px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0));
-  pointer-events: none;
-}
-
 /* Wallpaper picker has more to choose from now. */
 .wp-grid {
   grid-template-columns: repeat(4, 112px);
@@ -1387,4 +1320,42 @@ th .link-like {
 .wp-thumb img {
   width: 104px;
   height: 64px;
+}
+
+/* Browser meter: plain Vista progress bars on black glass. */
+.meter-row {
+  display: grid;
+  grid-template-columns: 54px 1fr 58px;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 2px 8px;
+  font-size: var(--fs-xs);
+  color: rgba(255, 255, 255, 0.85);
+}
+.meter-bar {
+  height: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.meter-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #b6ef8e 0%, #5ac12b 50%, #3ca10f 51%, #79d14a 100%);
+  transition: width 600ms;
+}
+.meter-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.cp-head-art {
+  flex: none;
+  width: 52px;
+  height: 52px;
+}
+.errp-art {
+  flex: none;
+  width: 56px;
+  height: 56px;
 }

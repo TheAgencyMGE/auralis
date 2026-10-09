@@ -70,8 +70,7 @@ export interface Settings {
   downloadDir: string
   askWhereToSave: boolean
   wallpaper: WallpaperId
-  widgets: { clock: boolean; weather: boolean; notes: boolean; meter: boolean; topSites: boolean; aquarium: boolean }
-  ambientEffects: boolean
+  widgets: { clock: boolean; weather: boolean; notes: boolean; meter: boolean; topSites: boolean }
   aeroSounds: boolean
   weatherLocation: { name: string; lat: number; lon: number } | null
   temperatureUnit: 'c' | 'f'
@@ -102,8 +101,7 @@ export const DEFAULT_SETTINGS: Settings = {
   downloadDir: '',
   askWhereToSave: false,
   wallpaper: 'meadow',
-  widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true, aquarium: true },
-  ambientEffects: true,
+  widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true },
   aeroSounds: true,
   weatherLocation: null,
   temperatureUnit: 'c',
@@ -163,10 +161,8 @@ export function sanitizeSettings(input: unknown, base: Settings = DEFAULT_SETTIN
       weather: bool(w.weather, d.widgets.weather),
       notes: bool(w.notes, d.widgets.notes),
       meter: bool(w.meter, d.widgets.meter),
-      topSites: bool(w.topSites, d.widgets.topSites),
-      aquarium: bool(w.aquarium, d.widgets.aquarium)
+      topSites: bool(w.topSites, d.widgets.topSites)
     },
-    ambientEffects: bool(s.ambientEffects, d.ambientEffects),
     aeroSounds: bool(s.aeroSounds, d.aeroSounds),
     weatherLocation:
       s.weatherLocation === null

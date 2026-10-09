@@ -126,6 +126,26 @@ try {
     await wait(1500)
     shot('aero-settings')
   }
+  if (scenario === 'real') {
+    const W = (fn, arg) => app.evaluate(fn, arg)
+    await W(() => { const a = globalThis.__auralis; a.settings.set({ wallpaper: 'lagoon', widgets: { meter: true }, weatherLocation: { name: 'Honolulu, Hawaii, United States', lat: 21.3, lon: -157.85 } }); const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('auralis://newtab/') })
+    await wait(3500)
+    shot('r1-ntp')
+    await W(() => { const a = globalThis.__auralis; const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('https://en.wikipedia.org/wiki/Frutiger_Aero') })
+    await wait(3500)
+    await chrome.click('.orb-button')
+    await wait(900)
+    shot('r2-menu')
+    await overlay.keyboard.press('Escape')
+    for (const pg of ['history', 'about']) {
+      await W((_e, p) => { const a = globalThis.__auralis; const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('auralis://' + p + '/') }, pg)
+      await wait(1500)
+      shot('r3-' + pg)
+    }
+    await W(() => { const a = globalThis.__auralis; const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('http://127.0.0.1:9/') })
+    await wait(2000)
+    shot('r4-error')
+  }
 } catch (err) {
   console.error(err)
 } finally {

@@ -158,7 +158,7 @@ export function TabStrip({ state, settings, menuAnchor }: { state: WindowState |
         aria-label={`Space: ${space?.name ?? 'Home'}`}
         onClick={(e) => void call('menu.spaces', rectOf(e.currentTarget))}
       >
-        <span className="gem" />
+        <Icon name="spaces" size={16} className="space-icon" />
         {(state?.spaces.length ?? 1) > 1 && <span className="space-name glow-text">{space?.name}</span>}
       </button>
       <div className="tabstrip" ref={stripRef} role="tablist" aria-label="Tabs" onPointerLeave={() => hidePreview()}>

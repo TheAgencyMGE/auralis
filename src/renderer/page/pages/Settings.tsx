@@ -83,10 +83,7 @@ function Appearance({ s }: { s: Settings }) {
       <Row label="Show the Home button" htmlFor="homebtn">
         <input id="homebtn" type="checkbox" className="toggle" checked={s.showHomeButton} onChange={(e) => set({ showHomeButton: e.target.checked })} />
       </Row>
-      <Row label="Bubbles and light on new tabs" help="Glass bubbles rise over the wallpaper (click them to pop), with soft bokeh and sparkles." htmlFor="ambient">
-        <input id="ambient" type="checkbox" className="toggle" checked={s.ambientEffects} onChange={(e) => set({ ambientEffects: e.target.checked })} />
-      </Row>
-      <Row label="Aero sounds" help="Soft water sounds when a download finishes, you add a favorite or pop a bubble." htmlFor="sounds">
+      <Row label="Aero sounds" help="A water drop when you add a favorite and a glass chime when a download finishes." htmlFor="sounds">
         <input id="sounds" type="checkbox" className="toggle" checked={s.aeroSounds} onChange={(e) => set({ aeroSounds: e.target.checked })} />
       </Row>
       <Row label="Preview tabs on hover" help="A thumbnail of the page appears when you rest the pointer on a tab." htmlFor="previews">
