@@ -55,6 +55,7 @@ function NormalTab() {
   const [picker, setPicker] = useState(false)
   const [customize, setCustomize] = useState(false)
   const wp = WALLPAPERS[s.wallpaper]
+  const hasGadgets = s.widgets.weather || s.widgets.notes || s.widgets.meter
 
   useEffect(() => {
     document.title = 'New Tab'
@@ -71,7 +72,7 @@ function NormalTab() {
   }, [now])
 
   return (
-    <div className={`ntp tone-${wp.tone}`}>
+    <div className={`ntp tone-${wp.tone}${hasGadgets ? '' : ' no-sidebar'}`}>
       <div className="ntp-wall" style={{ backgroundImage: `url(/wallpapers/${s.wallpaper}.webp)` }} />
       <div className="ntp-shade" />
 
@@ -88,11 +89,13 @@ function NormalTab() {
         {s.widgets.topSites && sites && <TopSites sites={sites} onRemove={(h) => setSites((x) => x?.filter((y) => y.host !== h) ?? null)} />}
       </main>
 
+      {hasGadgets && (
       <aside className="sidebar" aria-label="Gadgets">
         {s.widgets.weather && <WeatherGadget settings={s} />}
         {s.widgets.notes && <NotesGadget initial={s.notes} />}
         {s.widgets.meter && <MeterGadget />}
       </aside>
+      )}
 
       <footer className="ntp-foot">
         <button className="ntp-chip" onClick={() => setPicker((p) => !p)} aria-expanded={picker}>
