@@ -1,7 +1,7 @@
 // The new tab page: real photography, a search field, frequent sites, and
 // a Sidebar of gadgets on the right — Vista's desktop, as a start page.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { WALLPAPERS, SEARCH_ENGINES, type WallpaperId, type Settings } from '@shared/settings'
+import { ALL_WALLPAPER_IDS, SEARCH_ENGINES, wallpaperInfo, type WallpaperId, type Settings } from '@shared/settings'
 import { call, useSettings } from '@ui/api'
 import { Favicon, Icon } from '@ui/icons'
 import { weatherInfo } from '../weather'
@@ -52,8 +52,8 @@ function NormalTab() {
   const [now, setNow] = useState(new Date())
   const [picker, setPicker] = useState(false)
   const [customize, setCustomize] = useState(false)
-  const wp = WALLPAPERS[s.wallpaper]
-  const hasGadgets = s.widgets.weather || s.widgets.notes || s.widgets.meter
+  const wp = wallpaperInfo(s.wallpaper)
+  const hasGadgets = s.widgets.weather || s.widgets.notes || s.widgets.meter || s.widgets.aquarium
 
   useEffect(() => {
     document.title = 'New Tab'
@@ -71,7 +71,8 @@ function NormalTab() {
 
   return (
     <div className={`ntp tone-${wp.tone}${hasGadgets ? '' : ' no-sidebar'}`}>
-      <div className="ntp-wall" style={{ backgroundImage: `url(/wallpapers/${s.wallpaper}.webp)` }} />
+      <div className="ntp-wall" style={{ backgroundImage: `url(${wp.image})` }} />
+      {wp.video && <LiveVideo key={wp.video} src={wp.video} poster={wp.image} className="ntp-live" />}
       <div className="ntp-shade" />
 
       <main className="ntp-main">
@@ -90,6 +91,11 @@ function NormalTab() {
       {hasGadgets && (
       <aside className="sidebar" aria-label="Gadgets">
         {s.widgets.weather && <WeatherGadget settings={s} />}
+        {s.widgets.aquarium && (
+          <section className="gadget aquarium" aria-label="Aquarium">
+            <LiveVideo src="/live/tank.mp4" poster="/live/tank.webp" className="tank" />
+          </section>
+        )}
         {s.widgets.notes && <NotesGadget initial={s.notes} />}
         {s.widgets.meter && <MeterGadget />}
       </aside>
@@ -103,7 +109,7 @@ function NormalTab() {
           <Icon name="spaces" size={14} /> Gadgets
         </button>
         <a className="ntp-credit" href={wp.source} onClick={(e) => (e.preventDefault(), void call('nav.go', wp.source))}>
-          Photo by {wp.credit} on Unsplash
+          {wp.live ? 'Video' : 'Photo'} by {wp.credit} on {wp.live ? 'Pexels' : 'Unsplash'}
         </a>
       </footer>
 
@@ -361,7 +367,39 @@ function Bar({ label, value, text }: { label: string; value: number; text: strin
 
 // ---- customisation -----------------------------------------------------------------------
 
+/**
+ * A muted, looping video that only plays while the page is visible and the
+ * user hasn't asked for reduced motion; otherwise its poster stands still.
+ */
+function LiveVideo({ src, poster, className }: { src: string; poster: string; className: string }) {
+  const ref = useRef<HTMLVideoElement>(null)
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const sync = () => {
+      if (document.hidden || still) v.pause()
+      else void v.play().catch(() => {})
+    }
+    sync()
+    document.addEventListener('visibilitychange', sync)
+    return () => document.removeEventListener('visibilitychange', sync)
+  }, [src])
+  return <video ref={ref} className={className} src={src} poster={poster} muted loop playsInline preload="auto" aria-hidden />
+}
+
 function WallpaperPicker({ current, onClose }: { current: WallpaperId; onClose: () => void }) {
+  const live = ALL_WALLPAPER_IDS.filter((id) => id.startsWith('live:'))
+  const photos = ALL_WALLPAPER_IDS.filter((id) => !id.startsWith('live:'))
+  const tile = (id: WallpaperId) => {
+    const w = wallpaperInfo(id)
+    return (
+      <button key={id} className={`wp-thumb${id === current ? ' is-on' : ''}`} onClick={() => void call('settings.set', { wallpaper: id })} aria-pressed={id === current}>
+        <img src={w.thumb} alt="" />
+        <span>{w.name}</span>
+      </button>
+    )
+  }
   return (
     <div className="ntp-panel wp-panel" role="dialog" aria-label="Choose a wallpaper">
       <div className="ntp-panel-head">
@@ -370,14 +408,10 @@ function WallpaperPicker({ current, onClose }: { current: WallpaperId; onClose: 
           <Icon name="close" size={10} />
         </button>
       </div>
-      <div className="wp-grid">
-        {(Object.keys(WALLPAPERS) as WallpaperId[]).map((id) => (
-          <button key={id} className={`wp-thumb${id === current ? ' is-on' : ''}`} onClick={() => void call('settings.set', { wallpaper: id })} aria-pressed={id === current}>
-            <img src={`/wallpapers/${id}.thumb.webp`} alt="" />
-            <span>{WALLPAPERS[id].name}</span>
-          </button>
-        ))}
-      </div>
+      <div className="wp-section">Live</div>
+      <div className="wp-grid">{live.map(tile)}</div>
+      <div className="wp-section">Photos</div>
+      <div className="wp-grid">{photos.map(tile)}</div>
     </div>
   )
 }
@@ -388,6 +422,7 @@ function GadgetPicker({ s, onClose }: { s: Settings; onClose: () => void }) {
     { key: 'topSites', label: 'Frequently visited sites' },
     { key: 'weather', label: 'Weather' },
     { key: 'notes', label: 'Notes' },
+    { key: 'aquarium', label: 'Aquarium' },
     { key: 'meter', label: 'Browser meter' }
   ]
   return (

@@ -27,6 +27,22 @@ photo service.
 - Butterfly — Erik Karits — https://unsplash.com/photos/E3TZQOWh8IA
 - Leaves — Kumiko Shimizu — https://unsplash.com/photos/Pxa0yJ2Elxc
 
+## Live wallpapers and aquarium footage (Pexels License)
+
+Real video footage used under the Pexels License (https://www.pexels.com/license/):
+free to use, attribution appreciated, not to be sold unaltered or redistributed
+as stock footage.
+
+- Rolling Fields — Egor Kunovsky — https://www.pexels.com/video/3829702/
+- Bubbles — Kindel Media — https://www.pexels.com/video/8823625/
+- Sunbeams — James Cheney — https://www.pexels.com/video/2632737/
+- Dolphins — Nichola Peters — https://www.pexels.com/video/10802614/
+- Koi — Samuel Sobrinho — https://www.pexels.com/video/3582903/
+- Jellyfish — Chris Munnik — https://www.pexels.com/video/4805827/
+- Droplet — Pixabay — https://www.pexels.com/video/855494/
+- Northern Lights — Nico Becker — https://www.pexels.com/video/5600929/
+- Aquarium gadget — Magda Ehlers — https://www.pexels.com/video/18900261/
+
 ## Data services
 
 - Weather forecasts and geocoding: Open-Meteo (https://open-meteo.com), data

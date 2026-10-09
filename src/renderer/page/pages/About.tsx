@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { WALLPAPERS } from '@shared/settings'
+import { LIVE_WALLPAPERS, WALLPAPERS } from '@shared/settings'
 import { call } from '@ui/api'
 import { Orb } from '@ui/Orb'
 import { Group, Shell } from '../Shell'
@@ -62,7 +62,28 @@ export default function About() {
       <Group title="Updates" intro="Auralis is built on Electron, which follows Chromium’s security releases. New versions are published as installers; install the latest one over this version to update. Your favorites, history and settings are kept.">
         <span />
       </Group>
-      <Group title="Photography" intro="New tab wallpapers are used under the Unsplash License.">
+      <Group title="Live wallpapers" intro="Real footage from Pexels, used under the Pexels License. The aquarium gadget plays “An aquarium with many fish and anemones” by Magda Ehlers.">
+        <dl className="kv">
+          {Object.values(LIVE_WALLPAPERS).map((w) => (
+            <span key={w.name} style={{ display: 'contents' }}>
+              <dt>{w.name}</dt>
+              <dd>
+                {w.credit},{' '}
+                <a
+                  href={w.source}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    void call('nav.go', w.source, 'newtab')
+                  }}
+                >
+                  {w.source.replace('https://', '')}
+                </a>
+              </dd>
+            </span>
+          ))}
+        </dl>
+      </Group>
+      <Group title="Photography" intro="New tab photos are used under the Unsplash License.">
         <dl className="kv">
           {Object.values(WALLPAPERS).map((w) => (
             <span key={w.name} style={{ display: 'contents' }}>

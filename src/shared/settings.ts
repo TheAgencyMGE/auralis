@@ -46,7 +46,49 @@ export const WALLPAPERS = {
   leaves: { name: 'Leaves', credit: 'Kumiko Shimizu', source: 'https://unsplash.com/photos/Pxa0yJ2Elxc', tone: 'light' }
 } as const
 
-export type WallpaperId = keyof typeof WALLPAPERS
+/** Live wallpapers: real footage from Pexels (Pexels License), looped. */
+export const LIVE_WALLPAPERS = {
+  fields: { name: 'Rolling Fields', credit: 'Egor Kunovsky', source: 'https://www.pexels.com/video/3829702/', tone: 'light' },
+  bubbles: { name: 'Bubbles', credit: 'Kindel Media', source: 'https://www.pexels.com/video/8823625/', tone: 'light' },
+  sunbeams: { name: 'Sunbeams', credit: 'James Cheney', source: 'https://www.pexels.com/video/2632737/', tone: 'light' },
+  dolphins: { name: 'Dolphins', credit: 'Nichola Peters', source: 'https://www.pexels.com/video/10802614/', tone: 'light' },
+  koi: { name: 'Koi', credit: 'Samuel Sobrinho', source: 'https://www.pexels.com/video/3582903/', tone: 'light' },
+  jellyfish: { name: 'Jellyfish', credit: 'Chris Munnik', source: 'https://www.pexels.com/video/4805827/', tone: 'dark' },
+  droplet: { name: 'Droplet', credit: 'Pixabay', source: 'https://www.pexels.com/video/855494/', tone: 'light' },
+  borealis: { name: 'Northern Lights', credit: 'Nico Becker', source: 'https://www.pexels.com/video/5600929/', tone: 'dark' }
+} as const
+
+export type PhotoWallpaperId = keyof typeof WALLPAPERS
+export type LiveWallpaperId = keyof typeof LIVE_WALLPAPERS
+/** Live ids are stored as "live:<id>" so they never collide with photos. */
+export type WallpaperId = PhotoWallpaperId | `live:${LiveWallpaperId}`
+
+export const ALL_WALLPAPER_IDS: WallpaperId[] = [
+  ...(Object.keys(LIVE_WALLPAPERS) as LiveWallpaperId[]).map((k) => `live:${k}` as const),
+  ...(Object.keys(WALLPAPERS) as PhotoWallpaperId[])
+]
+
+export interface WallpaperInfo {
+  name: string
+  credit: string
+  source: string
+  tone: 'light' | 'dark'
+  live: boolean
+  /** background image (for live wallpapers, the poster shown while loading) */
+  image: string
+  thumb: string
+  video: string | null
+}
+
+export function wallpaperInfo(id: WallpaperId): WallpaperInfo {
+  if (id.startsWith('live:')) {
+    const key = id.slice(5) as LiveWallpaperId
+    const w = LIVE_WALLPAPERS[key] ?? LIVE_WALLPAPERS.fields
+    return { ...w, live: true, image: `/live/${key}.webp`, thumb: `/live/${key}.thumb.webp`, video: `/live/${key}.mp4` }
+  }
+  const w = WALLPAPERS[id as PhotoWallpaperId] ?? WALLPAPERS.meadow
+  return { ...w, live: false, image: `/wallpapers/${id}.webp`, thumb: `/wallpapers/${id}.thumb.webp`, video: null }
+}
 
 export const SLEEP_OPTIONS = [0, 5, 15, 30, 60, 120] as const
 
@@ -70,7 +112,7 @@ export interface Settings {
   downloadDir: string
   askWhereToSave: boolean
   wallpaper: WallpaperId
-  widgets: { clock: boolean; weather: boolean; notes: boolean; meter: boolean; topSites: boolean }
+  widgets: { clock: boolean; weather: boolean; notes: boolean; meter: boolean; topSites: boolean; aquarium: boolean }
   aeroSounds: boolean
   weatherLocation: { name: string; lat: number; lon: number } | null
   temperatureUnit: 'c' | 'f'
@@ -100,8 +142,8 @@ export const DEFAULT_SETTINGS: Settings = {
   globalPrivacyControl: true,
   downloadDir: '',
   askWhereToSave: false,
-  wallpaper: 'meadow',
-  widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true },
+  wallpaper: 'live:fields',
+  widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true, aquarium: true },
   aeroSounds: true,
   weatherLocation: null,
   temperatureUnit: 'c',
@@ -155,13 +197,14 @@ export function sanitizeSettings(input: unknown, base: Settings = DEFAULT_SETTIN
     globalPrivacyControl: bool(s.globalPrivacyControl, d.globalPrivacyControl),
     downloadDir: str(s.downloadDir, 1024, d.downloadDir),
     askWhereToSave: bool(s.askWhereToSave, d.askWhereToSave),
-    wallpaper: oneOf(s.wallpaper, Object.keys(WALLPAPERS) as WallpaperId[], d.wallpaper),
+    wallpaper: oneOf(s.wallpaper, ALL_WALLPAPER_IDS, d.wallpaper),
     widgets: {
       clock: bool(w.clock, d.widgets.clock),
       weather: bool(w.weather, d.widgets.weather),
       notes: bool(w.notes, d.widgets.notes),
       meter: bool(w.meter, d.widgets.meter),
-      topSites: bool(w.topSites, d.widgets.topSites)
+      topSites: bool(w.topSites, d.widgets.topSites),
+      aquarium: bool(w.aquarium, d.widgets.aquarium)
     },
     aeroSounds: bool(s.aeroSounds, d.aeroSounds),
     weatherLocation:

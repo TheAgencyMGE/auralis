@@ -146,6 +146,30 @@ try {
     await wait(2000)
     shot('r4-error')
   }
+  if (scenario === 'live') {
+    for (const wp of ['live:fields', 'live:bubbles', 'live:dolphins', 'live:koi', 'live:jellyfish', 'live:borealis']) {
+      await app.evaluate((_e, wp) => { const a = globalThis.__auralis; a.settings.set({ wallpaper: wp, widgets: { aquarium: true }, weatherLocation: { name: 'Honolulu, Hawaii, United States', lat: 21.3, lon: -157.85 } }); const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('auralis://newtab/') }, wp)
+      await wait(3000)
+      const ntp = app.windows().find((w) => w.url().startsWith('auralis://newtab'))
+      const t1 = await ntp.evaluate(() => [...document.querySelectorAll('video')].map((v) => +v.currentTime.toFixed(2)))
+      await wait(1500)
+      const t2 = await ntp.evaluate(() => [...document.querySelectorAll('video')].map((v) => ({ t: +v.currentTime.toFixed(2), paused: v.paused, err: v.error && v.error.code, w: v.videoWidth })))
+      console.log(wp, JSON.stringify(t1), JSON.stringify(t2))
+      shot('live-' + wp.slice(5))
+    }
+  }
+  if (scenario === 'loop') {
+    await app.evaluate(() => { const a = globalThis.__auralis; a.settings.set({ wallpaper: 'live:borealis' }); const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('auralis://newtab/') })
+    await wait(2000)
+    const ntp = app.windows().find((w) => w.url().startsWith('auralis://newtab'))
+    for (let i = 0; i < 6; i++) {
+      console.log(JSON.stringify(await ntp.evaluate(() => { const v = document.querySelector('video.ntp-live'); return { t: +v.currentTime.toFixed(2), dur: +v.duration.toFixed(2), ended: v.ended, paused: v.paused } })))
+      await wait(2000)
+    }
+    await ntp.click('text=Wallpaper')
+    await wait(800)
+    shot('picker')
+  }
 } catch (err) {
   console.error(err)
 } finally {
