@@ -7,6 +7,7 @@ import type { Settings } from '@shared/settings'
 import { DEFAULT_SETTINGS } from '@shared/settings'
 import type { WindowState } from '@shared/types'
 import { applyFrameTokens, bridge, call, rectOf } from '@ui/api'
+import { playSound, type SoundName } from '@ui/sound'
 import { TabStrip } from './Tabs'
 import { Toolbar } from './Toolbar'
 import { CaptionButtons, FavoritesBar, FindBar, StatusBar, ViewportFurniture } from './Bars'
@@ -20,6 +21,7 @@ export function App() {
   useEffect(() => {
     const offState = bridge().on('state', (s) => setState(s as WindowState))
     const offSettings = bridge().on('settings', (s) => setSettings(s as Settings))
+    const offSound = bridge().on('sound', (n) => playSound(n as SoundName))
     void call<{ settings: Settings; state: WindowState }>('chrome.ready').then((r) => {
       setSettings(r.settings)
       setState(r.state)
@@ -27,6 +29,7 @@ export function App() {
     return () => {
       offState()
       offSettings()
+      offSound()
     }
   }, [])
 

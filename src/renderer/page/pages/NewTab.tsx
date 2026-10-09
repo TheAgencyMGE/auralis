@@ -5,6 +5,8 @@ import { WALLPAPERS, SEARCH_ENGINES, type WallpaperId, type Settings } from '@sh
 import { call, useSettings } from '@ui/api'
 import { Favicon, Icon } from '@ui/icons'
 import { WeatherArt, weatherInfo } from '../weather-art'
+import { Ambient } from '../ambient'
+import { AquariumGadget } from '../aquarium'
 
 interface Site {
   url: string
@@ -55,7 +57,7 @@ function NormalTab() {
   const [picker, setPicker] = useState(false)
   const [customize, setCustomize] = useState(false)
   const wp = WALLPAPERS[s.wallpaper]
-  const hasGadgets = s.widgets.weather || s.widgets.notes || s.widgets.meter
+  const hasGadgets = s.widgets.weather || s.widgets.notes || s.widgets.meter || s.widgets.aquarium
 
   useEffect(() => {
     document.title = 'New Tab'
@@ -75,6 +77,7 @@ function NormalTab() {
     <div className={`ntp tone-${wp.tone}${hasGadgets ? '' : ' no-sidebar'}`}>
       <div className="ntp-wall" style={{ backgroundImage: `url(/wallpapers/${s.wallpaper}.webp)` }} />
       <div className="ntp-shade" />
+      <Ambient wallpaper={s.wallpaper} enabled={s.ambientEffects} sound={s.aeroSounds} />
 
       <main className="ntp-main">
         {s.widgets.clock && (
@@ -92,6 +95,7 @@ function NormalTab() {
       {hasGadgets && (
       <aside className="sidebar" aria-label="Gadgets">
         {s.widgets.weather && <WeatherGadget settings={s} />}
+        {s.widgets.aquarium && <AquariumGadget sound={s.aeroSounds} />}
         {s.widgets.notes && <NotesGadget initial={s.notes} />}
         {s.widgets.meter && <MeterGadget />}
       </aside>
@@ -409,6 +413,7 @@ function GadgetPicker({ s, onClose }: { s: Settings; onClose: () => void }) {
     { key: 'topSites', label: 'Frequently visited sites' },
     { key: 'weather', label: 'Weather' },
     { key: 'notes', label: 'Notes' },
+    { key: 'aquarium', label: 'Aquarium' },
     { key: 'meter', label: 'Browser meter' }
   ]
   return (
@@ -425,6 +430,14 @@ function GadgetPicker({ s, onClose }: { s: Settings; onClose: () => void }) {
           <input type="checkbox" className="toggle" checked={s.widgets[it.key]} onChange={(e) => void call('settings.set', { widgets: { [it.key]: e.target.checked } })} />
         </label>
       ))}
+      <label className="gp-row">
+        <span>Bubbles and light</span>
+        <input type="checkbox" className="toggle" checked={s.ambientEffects} onChange={(e) => void call('settings.set', { ambientEffects: e.target.checked })} />
+      </label>
+      <label className="gp-row">
+        <span>Aero sounds</span>
+        <input type="checkbox" className="toggle" checked={s.aeroSounds} onChange={(e) => void call('settings.set', { aeroSounds: e.target.checked })} />
+      </label>
       <label className="gp-row">
         <span>Temperature</span>
         <select className="field" value={s.temperatureUnit} onChange={(e) => void call('settings.set', { temperatureUnit: e.target.value })}>

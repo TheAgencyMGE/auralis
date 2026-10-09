@@ -149,7 +149,8 @@ export const EVENTS = [
   'bookmarks',
   'tasks',
   'flip.results',
-  'palette.results'
+  'palette.results',
+  'sound'
 ] as const
 export type EventName = (typeof EVENTS)[number]
 

@@ -414,7 +414,10 @@ export function bookmarkCurrent(win: BrowserWin, anchor?: Rect): void {
   const url = tab.displayUrl()
   if (!/^(https?|file):/.test(url)) return
   let node = ctx.bookmarks.findByUrl(url)
-  if (!node) node = ctx.bookmarks.create({ parentId: BAR_ID, kind: 'url', title: tab.title || url, url })
+  if (!node) {
+    node = ctx.bookmarks.create({ parentId: BAR_ID, kind: 'url', title: tab.title || url, url })
+    if (settings.get().aeroSounds) win.send('sound', 'drop')
+  }
   win.pushState()
   const id = node.id
   win.showOverlay(

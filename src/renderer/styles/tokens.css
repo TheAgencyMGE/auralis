@@ -314,3 +314,43 @@ select.field {
     outline: 1px solid Highlight;
   }
 }
+
+/* ---- Glossy "jelly" buttons for the primary action (Aqua / Wii era) ---- */
+.btn.is-default {
+  height: 27px;
+  padding: 0 16px;
+  border: 1px solid #1d7a3c;
+  border-radius: 14px;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(0, 60, 20, 0.7);
+  background:
+    radial-gradient(90% 60% at 50% 100%, rgba(190, 255, 140, 0.9), rgba(190, 255, 140, 0) 70%),
+    linear-gradient(180deg, #8fe06a 0%, #56c13a 50%, #34a326 51%, #49b830 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 1px 3px rgba(0, 50, 20, 0.35);
+}
+.btn.is-default::before {
+  content: none;
+}
+.btn.is-default:hover:not(:disabled) {
+  border-color: #17682f;
+  background:
+    radial-gradient(90% 60% at 50% 100%, rgba(220, 255, 170, 1), rgba(220, 255, 170, 0) 70%),
+    linear-gradient(180deg, #a6ec82 0%, #66cf47 50%, #3db12c 51%, #57c83a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 0 8px rgba(120, 230, 90, 0.75);
+}
+.btn.is-default:active:not(:disabled) {
+  background: linear-gradient(180deg, #3e9f2a, #4fb836);
+  box-shadow: inset 0 2px 4px rgba(0, 50, 10, 0.4);
+}
+.btn.is-default:disabled {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: #8fb79a;
+  background: linear-gradient(180deg, #c3dfbb, #a9cf9e);
+  text-shadow: none;
+}

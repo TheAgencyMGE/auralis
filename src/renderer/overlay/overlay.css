@@ -1265,3 +1265,8 @@ kbd {
   align-items: center;
   gap: 7px;
 }
+
+/* Wet-floor reflection under each Tab Flip card. */
+.flip-card {
+  -webkit-box-reflect: below 4px linear-gradient(transparent 82%, rgba(255, 255, 255, 0.18));
+}

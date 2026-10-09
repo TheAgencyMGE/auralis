@@ -295,7 +295,7 @@ const handlers: Record<string, Handler> = {
     const p = obj(patch)
     if (c.role === 'page' && c.page === 'newtab') {
       // The new tab page may only change its own presentation.
-      const allowed = ['widgets', 'notes', 'wallpaper', 'weatherLocation', 'temperatureUnit']
+      const allowed = ['widgets', 'notes', 'wallpaper', 'weatherLocation', 'temperatureUnit', 'ambientEffects', 'aeroSounds']
       for (const k of Object.keys(p)) if (!allowed.includes(k)) throw new Invalid(`newtab may not set ${k}`)
     }
     return settings.set(p)

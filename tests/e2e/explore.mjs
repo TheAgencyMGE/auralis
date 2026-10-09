@@ -11,7 +11,7 @@ fs.mkdirSync(outDir, { recursive: true })
 const app = await electron.launch({ args: ['.', ...(process.env.EXTRA_ARGS ? process.env.EXTRA_ARGS.split(' ') : [])], env: { ...process.env, AURALIS_E2E: '1', AURALIS_USER_DATA: profile } })
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 const shot = (name) => {
-  execFileSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts/shot.ps1', '-Out', path.join(outDir, `${name}.png`)], { stdio: 'inherit' })
+  execFileSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts/shot.ps1', '-Out', path.join(outDir, `${name}.png`), '-Title', 'Auralis E2E'], { stdio: 'inherit' })
 }
 const page = async (prefix) => {
   for (let i = 0; i < 50; i++) {
@@ -22,6 +22,8 @@ const page = async (prefix) => {
   throw new Error('no page ' + prefix)
 }
 await wait(2500)
+// A unique title so screenshots never pick up another Auralis window.
+await app.evaluate(() => [...globalThis.__auralis.BrowserWin.all.values()].forEach((w) => w.win.setTitle('Auralis E2E')))
 const chrome = await page('auralis://chrome')
 const overlay = await page('auralis://overlay')
 
@@ -110,6 +112,19 @@ try {
     shot('dpi')
     const geo = await app.evaluate(({ screen }) => { const a = globalThis.__auralis; const w = [...a.BrowserWin.all.values()][0]; return { view: w.activeTab.view.getBounds(), vp: w.viewport, content: w.win.getContentSize(), scale: screen.getPrimaryDisplay().scaleFactor } })
     console.log(JSON.stringify(geo))
+  }
+  if (scenario === 'aero') {
+    for (const wp of ['reef', 'meadow', 'grass', 'koi']) {
+      await app.evaluate((_e, wp) => { const a = globalThis.__auralis; a.settings.set({ wallpaper: wp, weatherLocation: { name: 'Honolulu, Hawaii, United States', lat: 21.3, lon: -157.85 } }); const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('auralis://newtab/') }, wp)
+      await wait(3500)
+      shot('aero-' + wp)
+    }
+    await app.evaluate(() => { const a = globalThis.__auralis; a.settings.set({ widgets: { weather: false, notes: false, aquarium: false, meter: false } }) })
+    await wait(1500)
+    shot('aero-nogadgets')
+    await app.evaluate(() => { const a = globalThis.__auralis; a.settings.set({ widgets: { weather: true, notes: true, aquarium: true } }); const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('auralis://settings/') })
+    await wait(1500)
+    shot('aero-settings')
   }
 } catch (err) {
   console.error(err)

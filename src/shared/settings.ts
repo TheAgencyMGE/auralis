@@ -17,6 +17,8 @@ export type SearchEngineId = keyof typeof SEARCH_ENGINES
 /** Vista's "Window Color and Appearance" swatches, retuned for 2026. */
 export const FRAME_COLORS = {
   sky: { name: 'Sky', tint: '#3d8fd6' },
+  aqua: { name: 'Aqua', tint: '#14aecb' },
+  lime: { name: 'Lime', tint: '#6cbf2a' },
   twilight: { name: 'Twilight', tint: '#3654a8' },
   sea: { name: 'Sea', tint: '#1f9aa6' },
   leaf: { name: 'Leaf', tint: '#4f9f3a' },
@@ -36,7 +38,12 @@ export const WALLPAPERS = {
   cumulus: { name: 'Cumulus', credit: 'Kumiko Shimizu', source: 'https://unsplash.com/photos/lNxMcE8mvIM', tone: 'light' },
   deep: { name: 'Deep Water', credit: 'Sime Basioli', source: 'https://unsplash.com/photos/BRkikoNP0KQ', tone: 'dark' },
   dew: { name: 'Dew', credit: 'Elimende Inagella', source: 'https://unsplash.com/photos/lYj0dLgMHmA', tone: 'dark' },
-  aurora: { name: 'Aurora', credit: 'v2osk', source: 'https://unsplash.com/photos/Ovn1hyBge38', tone: 'dark' }
+  aurora: { name: 'Aurora', credit: 'v2osk', source: 'https://unsplash.com/photos/Ovn1hyBge38', tone: 'dark' },
+  reef: { name: 'Reef', credit: 'NEOM', source: 'https://unsplash.com/photos/bOMVTvE2QFU', tone: 'light' },
+  koi: { name: 'Koi Pond', credit: 'Anne Laure P', source: 'https://unsplash.com/photos/C4gUYeDV0Xo', tone: 'dark' },
+  grass: { name: 'Morning Grass', credit: 'Aaron Burden', source: 'https://unsplash.com/photos/sI8V_ax011I', tone: 'light' },
+  butterfly: { name: 'Butterfly', credit: 'Erik Karits', source: 'https://unsplash.com/photos/E3TZQOWh8IA', tone: 'light' },
+  leaves: { name: 'Leaves', credit: 'Kumiko Shimizu', source: 'https://unsplash.com/photos/Pxa0yJ2Elxc', tone: 'light' }
 } as const
 
 export type WallpaperId = keyof typeof WALLPAPERS
@@ -63,7 +70,9 @@ export interface Settings {
   downloadDir: string
   askWhereToSave: boolean
   wallpaper: WallpaperId
-  widgets: { clock: boolean; weather: boolean; notes: boolean; meter: boolean; topSites: boolean }
+  widgets: { clock: boolean; weather: boolean; notes: boolean; meter: boolean; topSites: boolean; aquarium: boolean }
+  ambientEffects: boolean
+  aeroSounds: boolean
   weatherLocation: { name: string; lat: number; lon: number } | null
   temperatureUnit: 'c' | 'f'
   notes: string
@@ -93,7 +102,9 @@ export const DEFAULT_SETTINGS: Settings = {
   downloadDir: '',
   askWhereToSave: false,
   wallpaper: 'meadow',
-  widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true },
+  widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true, aquarium: true },
+  ambientEffects: true,
+  aeroSounds: true,
   weatherLocation: null,
   temperatureUnit: 'c',
   notes: '',
@@ -152,8 +163,11 @@ export function sanitizeSettings(input: unknown, base: Settings = DEFAULT_SETTIN
       weather: bool(w.weather, d.widgets.weather),
       notes: bool(w.notes, d.widgets.notes),
       meter: bool(w.meter, d.widgets.meter),
-      topSites: bool(w.topSites, d.widgets.topSites)
+      topSites: bool(w.topSites, d.widgets.topSites),
+      aquarium: bool(w.aquarium, d.widgets.aquarium)
     },
+    ambientEffects: bool(s.ambientEffects, d.ambientEffects),
+    aeroSounds: bool(s.aeroSounds, d.aeroSounds),
     weatherLocation:
       s.weatherLocation === null
         ? null

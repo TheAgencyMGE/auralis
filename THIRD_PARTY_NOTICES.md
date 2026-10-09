@@ -21,6 +21,11 @@ photo service.
 - Deep Water — Sime Basioli — https://unsplash.com/photos/BRkikoNP0KQ
 - Dew — Elimende Inagella — https://unsplash.com/photos/lYj0dLgMHmA
 - Aurora — v2osk — https://unsplash.com/photos/Ovn1hyBge38
+- Reef — NEOM — https://unsplash.com/photos/bOMVTvE2QFU
+- Koi Pond — Anne Laure P — https://unsplash.com/photos/C4gUYeDV0Xo
+- Morning Grass — Aaron Burden — https://unsplash.com/photos/sI8V_ax011I
+- Butterfly — Erik Karits — https://unsplash.com/photos/E3TZQOWh8IA
+- Leaves — Kumiko Shimizu — https://unsplash.com/photos/Pxa0yJ2Elxc
 
 ## Data services
 
@@ -34,8 +39,9 @@ photo service.
 
 ## Icons, artwork and fonts
 
-The Auralis orb, interface glyphs, weather illustrations and gadget artwork were
-drawn for Auralis and are covered by its MIT License. Text is set in Segoe UI,
+The Auralis orb, interface glyphs, weather illustrations, gadget artwork,
+aquarium fish and bubble effects were drawn for Auralis, and its interface
+sounds are synthesized at runtime; all and are covered by its MIT License. Text is set in Segoe UI,
 which is part of Windows and is not distributed with Auralis.
 
 # Software packages

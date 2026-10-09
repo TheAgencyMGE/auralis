@@ -119,7 +119,11 @@ async function boot(): Promise<void> {
     const w = [...BrowserWin.all.values()].find((x) => x.incognito === incognito && x.win.isFocused()) ?? BrowserWin.lastFocused
     w?.pushState()
   })
-  onDownloadComplete((d) => BrowserWin.lastFocused?.toast(`Downloaded “${d.filename}”`, 'download'))
+  onDownloadComplete((d) => {
+    const w = BrowserWin.lastFocused
+    w?.toast(`Downloaded “${d.filename}”`, 'download')
+    if (settings.get().aeroSounds) w?.send('sound', 'chime')
+  })
   onBlocked((wcId) => {
     for (const w of BrowserWin.all.values()) if (w.activeTab?.wc?.id === wcId) w.pushState()
   })

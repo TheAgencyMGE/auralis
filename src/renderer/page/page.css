@@ -1331,3 +1331,60 @@ th .link-like {
   background: linear-gradient(180deg, #b6ef8e 0%, #5ac12b 50%, #3ca10f 51%, #79d14a 100%);
   transition: width 300ms;
 }
+
+/* ---- Frutiger Aero: living water, glass gadgets, wet floors ---- */
+
+.ntp-ambient {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Web 2.0 "wet floor": every jewel sits on a reflection of itself. */
+.tile-jewel {
+  -webkit-box-reflect: below 3px linear-gradient(transparent 58%, rgba(255, 255, 255, 0.28));
+}
+.ntp-search {
+  -webkit-box-reflect: below 2px linear-gradient(transparent 70%, rgba(255, 255, 255, 0.16));
+}
+
+/* Aquarium: a glass tank with a polished rim and a band of reflected light. */
+.aquarium {
+  position: relative;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.05) 51%, rgba(255, 255, 255, 0.2) 100%),
+    rgba(30, 110, 160, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(0, 20, 45, 0.45),
+    0 8px 22px rgba(0, 20, 45, 0.35);
+}
+.aquarium .tank {
+  display: block;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 0 0 1px rgba(0, 30, 60, 0.6);
+  cursor: pointer;
+}
+.aquarium::after {
+  content: '';
+  position: absolute;
+  inset: 8px 8px auto 8px;
+  height: 46%;
+  border-radius: 5px 5px 40% 40% / 5px 5px 18px 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+/* Wallpaper picker has more to choose from now. */
+.wp-grid {
+  grid-template-columns: repeat(4, 112px);
+}
+.wp-thumb img {
+  width: 104px;
+  height: 64px;
+}

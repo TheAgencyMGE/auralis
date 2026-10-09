@@ -1,6 +1,6 @@
 # Captures the Auralis window (or the whole primary screen) to a PNG, including
 # the desktop acrylic behind it — what the user actually sees.
-param([string]$Out = "shot.png", [string]$Title = "Auralis")
+param([string]$Out = "shot.png", [string]$Title = "Auralis", [int]$ProcessId = 0)
 Add-Type -AssemblyName System.Drawing
 Add-Type @"
 using System;
@@ -14,7 +14,7 @@ public class Win {
 }
 "@
 [Win]::SetProcessDPIAware() | Out-Null
-$p = Get-Process | Where-Object { $_.MainWindowTitle -like "$Title*" -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+if ($ProcessId -gt 0) { $p = Get-Process -Id $ProcessId } else { $p = Get-Process | Where-Object { $_.MainWindowTitle -like "$Title*" -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1 }
 if (-not $p) { Write-Error "window not found"; exit 1 }
 $h = $p.MainWindowHandle
 [Win]::SetForegroundWindow($h) | Out-Null
