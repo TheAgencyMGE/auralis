@@ -15,6 +15,40 @@ interface Site {
 }
 
 export default function NewTab() {
+  const [incognito, setIncognito] = useState<boolean | null>(null)
+  useEffect(() => {
+    void call<{ incognito: boolean }>('ntp.info').then((i) => setIncognito(i.incognito))
+  }, [])
+  if (incognito === null) return null
+  return incognito ? <PrivateTab /> : <NormalTab />
+}
+
+/** InPrivate windows say plainly what is and isn't kept. */
+function PrivateTab() {
+  const s = useSettings()
+  useEffect(() => {
+    document.title = 'InPrivate'
+  }, [])
+  return (
+    <div className="ntp tone-dark is-private">
+      <div className="ntp-wall" style={{ backgroundImage: 'url(/wallpapers/aurora.webp)' }} />
+      <div className="ntp-shade" />
+      <main className="ntp-main">
+        <div className="private-card">
+          <span className="private-badge">
+            <Icon name="private" size={30} />
+          </span>
+          <h1>You’re browsing InPrivate</h1>
+          <p>When you close every InPrivate window, Auralis forgets the pages you visited, cookies, site data and anything you typed into forms in this window.</p>
+          <p>Files you download and favorites you add are kept. Your internet provider, employer or school, and the sites you visit, can still see what you do.</p>
+        </div>
+        <SearchBox engine={SEARCH_ENGINES[s.searchEngine].name} />
+      </main>
+    </div>
+  )
+}
+
+function NormalTab() {
   const s = useSettings()
   const [sites, setSites] = useState<Site[] | null>(null)
   const [now, setNow] = useState(new Date())

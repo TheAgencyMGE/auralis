@@ -46,7 +46,7 @@ export function rectOf(el: Element | null): { x: number; y: number; width: numbe
 export function applyFrameTokens(s: Settings, root: HTMLElement = document.documentElement): void {
   const tint = FRAME_COLORS[s.frameColor]?.tint ?? FRAME_COLORS.sky.tint
   root.style.setProperty('--frame-tint', tint)
-  root.style.setProperty('--frame-alpha', String(0.18 + (s.glassIntensity / 100) * 0.5))
+  root.style.setProperty('--frame-alpha', String(0.28 + (s.glassIntensity / 100) * 0.5))
   root.style.setProperty('--frame-solid', s.transparency ? '0' : '1')
 }
 

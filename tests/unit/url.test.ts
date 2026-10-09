@@ -55,7 +55,7 @@ describe('helpers', () => {
   it('classifies security', () => {
     expect(securityOf('https://a.com')).toBe('secure')
     expect(securityOf('http://a.com')).toBe('insecure')
-    expect(securityOf('http://localhost:5173')).toBe('secure')
+    expect(securityOf('http://localhost:5173')).toBe('none')
     expect(securityOf('auralis://newtab')).toBe('internal')
     expect(securityOf('https://a.com', true)).toBe('error')
   })

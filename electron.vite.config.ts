@@ -8,8 +8,9 @@ export default defineConfig({
   main: {
     resolve: { alias: { '@shared': shared } },
     build: {
+      // Pure-JS libraries are bundled so their (CLI) dependencies don't ship;
       // Readability is inlined as source text (?raw) for injection into pages.
-      externalizeDeps: { exclude: ['@mozilla/readability'] },
+      externalizeDeps: { exclude: ['@mozilla/readability', 'qrcode'] },
       rollupOptions: { input: { index: resolve(__dirname, 'src/main/index.ts') } }
     }
   },
@@ -33,6 +34,8 @@ export default defineConfig({
     server: { hmr: { host: 'localhost' } },
     build: {
       target: 'chrome150',
+      minify: 'esbuild',
+      cssMinify: true,
       rollupOptions: {
         input: {
           chrome: resolve(__dirname, 'src/renderer/chrome/index.html'),

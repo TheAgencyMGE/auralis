@@ -70,6 +70,7 @@ const PAGE = [
   'settings.get',
   'settings.set',
   'nav.go',
+  'ntp.info',
   'ntp.topSites',
   'ntp.removeTopSite',
   'weather.get',
@@ -100,7 +101,8 @@ const PAGE = [
   'dialog.chooseFolder',
   'app.info',
   'app.licenses',
-  'app.relaunch'
+  'app.relaunch',
+  'app.defaultBrowser'
 ] as const
 
 export type ChromeMethod = (typeof CHROME)[number]
@@ -117,10 +119,10 @@ export const ROLE_METHODS: Record<Role, readonly string[]> = {
 /** Which internal page may call which page methods. Least privilege: the new
  *  tab page cannot clear history, the history page cannot change settings. */
 export const PAGE_METHODS: Record<InternalPage, readonly PageMethod[]> = {
-  newtab: ['settings.get', 'settings.set', 'nav.go', 'ntp.topSites', 'ntp.removeTopSite', 'weather.get', 'geo.search', 'meter.get'],
+  newtab: ['settings.get', 'settings.set', 'nav.go', 'ntp.info', 'ntp.topSites', 'ntp.removeTopSite', 'weather.get', 'geo.search', 'meter.get'],
   settings: [
     'settings.get', 'settings.set', 'nav.go', 'data.clear', 'permissions.list', 'permissions.remove', 'shield.stats',
-    'dialog.chooseFolder', 'bookmarks.import', 'bookmarks.export', 'app.info', 'geo.search', 'app.relaunch'
+    'dialog.chooseFolder', 'bookmarks.import', 'bookmarks.export', 'app.info', 'geo.search', 'app.relaunch', 'app.defaultBrowser'
   ],
   history: ['settings.get', 'nav.go', 'history.search', 'history.remove', 'history.clear'],
   bookmarks: [

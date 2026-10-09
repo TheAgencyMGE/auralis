@@ -15,15 +15,15 @@
     "test": "node scripts/test-unit.mjs",
     "test:e2e": "npm run build && playwright test",
     "icons": "node scripts/build-icons.mjs",
-    "dist": "npm run typecheck && npm run build && electron-builder --win --x64",
-    "dist:dir": "npm run build && electron-builder --win --x64 --dir"
+    "dist": "npm run typecheck && npm test && npm run build && node scripts/notices.mjs && electron-builder --win --x64",
+    "dist:dir": "npm run build && node scripts/notices.mjs && electron-builder --win --x64 --dir",
+    "notices": "node scripts/notices.mjs"
   },
   "dependencies": {
-    "@ghostery/adblocker-electron": "2.18.2",
-    "@mozilla/readability": "0.6.0",
-    "qrcode": "1.5.4"
+    "@ghostery/adblocker-electron": "2.18.2"
   },
   "devDependencies": {
+    "@mozilla/readability": "0.6.0",
     "@playwright/test": "1.63.0",
     "@types/node": "24.19.1",
     "@types/qrcode": "1.5.6",
@@ -34,6 +34,7 @@
     "electron-builder": "26.16.1",
     "electron-vite": "5.0.0",
     "png-to-ico": "3.0.2",
+    "qrcode": "1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "sharp": "0.35.5",

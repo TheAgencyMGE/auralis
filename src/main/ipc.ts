@@ -1,7 +1,7 @@
 // The single IPC entry point. Every call is attributed to a role by the
 // identity of the sending webContents *and* its committed origin, checked
 // against the role's (and page's) allowlist, and its arguments validated.
-import { app, dialog, ipcMain, session, type IpcMainInvokeEvent } from 'electron'
+import { app, dialog, ipcMain, session, shell, type IpcMainInvokeEvent } from 'electron'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { BrowserWin } from './window'
@@ -288,7 +288,8 @@ const handlers: Record<string, Handler> = {
   },
 
   // new tab page
-  'ntp.topSites': () => (settings.get().widgets.topSites ? topSites(8) : []),
+  'ntp.info': (c) => ({ incognito: !!c.win?.incognito }),
+  'ntp.topSites': (c) => (settings.get().widgets.topSites && !c.win?.incognito ? topSites(8) : []),
   'ntp.removeTopSite': (_c, host) => ctx.history.hideTopSite(str(host, 300).replace(/^www\./, '')),
   'weather.get': () => weather(),
   'geo.search': (_c, q) => geocode(str(q, 100)),
@@ -465,6 +466,11 @@ const handlers: Record<string, Handler> = {
     } catch {
       return 'Third-party notices are included with the installer.'
     }
+  },
+  'app.defaultBrowser': async () => {
+    // Windows only lets the user choose; this opens Auralis' entry in Default apps.
+    await shell.openExternal('ms-settings:defaultapps?registeredAppUser=Auralis')
+    return app.isPackaged
   },
   'app.relaunch': () => {
     app.relaunch()

@@ -103,8 +103,8 @@ export const COMMANDS: Command[] = [
   { id: 'devtools', label: 'Developer tools', section: 'Page', shortcut: 'F12', keywords: 'inspect console', run: (_w, t) => t?.wc?.toggleDevTools() },
   { id: 'reader', label: 'Reader view', section: 'Page', shortcut: 'F9', keywords: 'article read immersive', enabled: (_w, t) => web(t), run: (w, t) => t && void openReader(w, t) },
   // tools
-  { id: 'screenshot', label: 'Screenshot — visible area', section: 'Tools', shortcut: 'Ctrl+Shift+S', keywords: 'capture', enabled: (_w, t) => !!t?.wc, run: (w, t) => t && void screenshot(w, t, 'visible') },
-  { id: 'screenshot-full', label: 'Screenshot — full page', section: 'Tools', keywords: 'capture long scrolling', enabled: (_w, t) => !!t?.wc, run: (w, t) => t && void screenshot(w, t, 'full') },
+  { id: 'screenshot', label: 'Take screenshot', section: 'Tools', shortcut: 'Ctrl+Shift+S', keywords: 'capture', enabled: (_w, t) => !!t?.wc, run: (w, t) => t && void screenshot(w, t, 'visible') },
+  { id: 'screenshot-full', label: 'Take full-page screenshot', section: 'Tools', keywords: 'capture long scrolling', enabled: (_w, t) => !!t?.wc, run: (w, t) => t && void screenshot(w, t, 'full') },
   { id: 'qr', label: 'Create QR code for this page', section: 'Tools', keywords: 'share phone', enabled: (_w, t) => web(t), run: (w, t) => t && void showQr(w, t) },
   { id: 'pip', label: 'Picture-in-picture', section: 'Tools', keywords: 'video float', enabled: (_w, t) => !!t?.wc, run: (w, t) => t && void pictureInPicture(w, t) },
   { id: 'task-manager', label: 'Task Manager', section: 'Tools', shortcut: 'Shift+Esc', keywords: 'memory cpu processes', run: (w) => openInternal(w, 'taskmanager') },

@@ -221,8 +221,10 @@ function Tab(props: {
     <Icon name="warning" size={14} className="tab-warn" />
   ) : tab.loading ? (
     <span className="busy-ring" aria-label="Loading" />
+  ) : tab.security === 'internal' ? (
+    <Orb size={16} />
   ) : (
-    <Favicon src={tab.isNewTab ? null : tab.favicon} dim={tab.asleep} />
+    <Favicon src={tab.favicon} dim={tab.asleep} />
   )
 
   return (

@@ -199,7 +199,8 @@ export function securityOf(url: string, certError = false): import('./types').Se
   if (url.startsWith('https:')) return 'secure'
   if (url.startsWith('http:')) {
     const h = hostOf(url)
-    return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' ? 'secure' : 'insecure'
+    // Local development servers: no lock (it isn't encrypted) but no alarm either.
+    return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h.endsWith('.localhost') ? 'none' : 'insecure'
   }
   if (url.startsWith('file:')) return 'file'
   return 'none'

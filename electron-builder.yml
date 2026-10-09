@@ -1,0 +1,45 @@
+appId: com.auralis.browser
+productName: Auralis
+copyright: Copyright © 2026 Auralis Project
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**/*
+  - "!out/**/*.map"
+  - package.json
+  - build/icon.ico
+  - THIRD_PARTY_NOTICES.md
+asar: true
+# Each node_modules package that ships is a real runtime dependency; renderer
+# and bundled libraries live inside out/.
+npmRebuild: false
+electronLanguages: [en-US, en-GB, de, fr, es, it, ja, ko, nl, pl, pt-BR, ru, sv, tr, zh-CN, zh-TW]
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+  loadBrowserProcessSpecificV8Snapshot: false
+  grantFileProtocolExtraPrivileges: false
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+  artifactName: Auralis-Setup-${version}-x64.${ext}
+  legalTrademarks: Auralis
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Auralis
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  deleteAppDataOnUninstall: false
+  include: build/installer.nsh
+  license: LICENSE

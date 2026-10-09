@@ -112,6 +112,11 @@ function Startup({ s }: { s: Settings }) {
           </label>
         ))}
       </div>
+      <Row label="Default browser" help="Windows lets you choose your default browser in Settings. Pick Auralis under Default apps.">
+        <button className="btn" onClick={() => void call('app.defaultBrowser')}>
+          Open Default apps
+        </button>
+      </Row>
       <Row label="Home page" htmlFor="home">
         <input
           id="home"

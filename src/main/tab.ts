@@ -7,6 +7,7 @@ import { ctx, settings } from './context'
 import { blockedFor, resetBlocked, upgradedFrom, clearUpgrade, isShieldActiveFor } from './shield'
 import { certificateFor } from './web-session'
 import { logger } from './log'
+import { decodeIco, isIco } from './ico'
 import { EXTERNAL_SCHEMES, NEW_TAB_URL, SCHEME, WEB_SCHEMES, hostOf, internalPage, securityOf } from '../shared/url'
 import type { FindState, TabState } from '../shared/types'
 
@@ -544,7 +545,12 @@ async function fetchFavicon(ses: Session, url: string): Promise<{ data: string; 
     // SVG renders safely inside <img>; scripts never run there.
     return { data: 'data:image/svg+xml;base64,' + bytes.toString('base64'), accent: null }
   }
-  const img = nativeImage.createFromBuffer(bytes)
+  let img = nativeImage.createFromBuffer(bytes)
+  if (img.isEmpty() && isIco(bytes)) {
+    const ico = decodeIco(bytes)
+    if (ico?.kind === 'png') img = nativeImage.createFromBuffer(ico.data)
+    else if (ico) img = nativeImage.createFromBitmap(ico.data, { width: ico.width, height: ico.height })
+  }
   if (img.isEmpty()) return null
   const icon = img.getSize().width > 32 ? img.resize({ width: 32, height: 32, quality: 'best' }) : img
   return { data: icon.toDataURL(), accent: accentOf(icon) }

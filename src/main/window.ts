@@ -196,6 +196,12 @@ export class BrowserWin implements TabHost {
     this.win.once('closed', offSettings)
     this.win.on('close', () => onWindowClosing(this))
     this.win.on('closed', () => {
+      if (this.incognito) {
+        // Forget everything from this InPrivate window now, not at exit.
+        void this.session.clearStorageData().catch(() => {})
+        void this.session.clearCache().catch(() => {})
+        this.session.flushStorageData()
+      }
       BrowserWin.all.delete(this.id)
       if (BrowserWin.lastFocused === this) BrowserWin.lastFocused = null
       for (const t of this.tabs) t.destroyNow()
