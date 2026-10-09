@@ -12,11 +12,11 @@ import { FaviconStore } from './data/favicons'
 import { registerSchemePrivileges } from './protocol'
 import { installIpc } from './ipc'
 import { initShield, installShieldIpc, onBlocked } from './shield'
-import { setPermissionPrompter } from './web-session'
+import { setPermissionPrompter, setScreenPicker } from './web-session'
 import { BrowserWin, wireWindowHooks } from './window'
 import { handleKey } from './shortcuts'
 import { initSessionStore, scheduleSave, onWindowClosing, onWindowClosed, flushOnQuit } from './session-store'
-import { promptPermission } from './menus'
+import { pickScreen, promptPermission } from './menus'
 import { installDownloads, onDownloadComplete, onDownloadStarted, onDownloadsChanged, hasActiveDownloads } from './downloads'
 import { logger } from './log'
 import { NEW_TAB_URL } from '../shared/url'
@@ -104,6 +104,13 @@ async function boot(): Promise<void> {
       if (tab) return promptPermission(w, tab, origin, permissions, extra)
     }
     return 'deny'
+  })
+  setScreenPicker(async (wc, origin, audio) => {
+    for (const w of BrowserWin.all.values()) {
+      const tab = w.tabs.find((t) => t.wc === wc)
+      if (tab) return pickScreen(w, tab, origin, audio)
+    }
+    return null
   })
   app.on('session-created', (ses) => installDownloads(ses, ses !== session.defaultSession && !ses.isPersistent()))
   installDownloads(session.defaultSession, false)

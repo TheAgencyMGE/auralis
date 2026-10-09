@@ -1,6 +1,6 @@
 // Everything that opens in the overlay: context menus, the app menu,
 // popovers and prompts. Each builder maps overlay action ids to closures.
-import { dialog, nativeImage, shell, type ContextMenuParams } from 'electron'
+import { desktopCapturer, dialog, nativeImage, shell, type ContextMenuParams } from 'electron'
 import { copyPng, copyText } from './clip'
 import path from 'node:path'
 import { BrowserWin, type MenuSpec } from './window'
@@ -293,8 +293,9 @@ export function promptPermission(win: BrowserWin, tab: Tab, origin: string, perm
       win.showOverlay(
         { content: { kind: 'permission', prompt: { id: ++promptId, origin, permissions: labels } }, anchor, align: 'start' },
         (id) => {
-          win.overlay.hide()
+          // Record the answer before closing: closing alone means "dismissed".
           finish(id === 'allow' ? 'allow' : id === 'deny' ? 'deny' : 'dismiss')
+          win.overlay.hide()
         },
         () => finish('dismiss')
       )
@@ -312,6 +313,44 @@ export function promptPermission(win: BrowserWin, tab: Tab, origin: string, perm
         }
       }, 400)
     }
+  })
+}
+
+// ---- screen sharing picker ----------------------------------------------------------------------------
+
+export async function pickScreen(win: BrowserWin, tab: Tab, origin: string, audio: boolean): Promise<{ id: string; name: string; audio: boolean } | null> {
+  if (win.activeTab !== tab) win.activate(tab)
+  const raw = await desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 320, height: 200 }, fetchWindowIcons: true })
+  const sources = raw
+    .filter((s) => !s.thumbnail.isEmpty())
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      kind: s.id.startsWith('screen') ? ('screen' as const) : ('window' as const),
+      thumbnail: s.thumbnail.toDataURL(),
+      icon: s.appIcon && !s.appIcon.isEmpty() ? s.appIcon.resize({ width: 16, height: 16 }).toDataURL() : null
+    }))
+  return new Promise((resolve) => {
+    let done = false
+    const finish = (v: { id: string; name: string; audio: boolean } | null) => {
+      if (!done) {
+        done = true
+        resolve(v)
+      }
+    }
+    win.showOverlay(
+      { content: { kind: 'screens', origin, audio, sources }, anchor: point(0, 0), align: 'center', modal: true },
+      (id, payload) => {
+        if (id === 'share' && payload && typeof payload === 'object') {
+          const p = payload as { id?: unknown; audio?: unknown }
+          const src = sources.find((s) => s.id === p.id)
+          // Only a source we offered can be shared; system audio only with a whole screen.
+          finish(src ? { id: src.id, name: src.name, audio: p.audio === true && audio && src.kind === 'screen' } : null)
+        } else finish(null)
+        win.overlay.hide()
+      },
+      () => finish(null)
+    )
   })
 }
 

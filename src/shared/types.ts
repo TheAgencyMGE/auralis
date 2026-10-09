@@ -196,6 +196,15 @@ export type OverlayContent =
   | { kind: 'zoom'; level: number }
   | { kind: 'confirm'; title: string; message: string; confirm: string; cancel: string; token: string }
   | { kind: 'toast'; message: string; icon?: string }
+  | { kind: 'screens'; origin: string; audio: boolean; sources: ScreenSource[] }
+
+export interface ScreenSource {
+  id: string
+  name: string
+  kind: 'screen' | 'window'
+  thumbnail: string
+  icon: string | null
+}
 
 export interface OverlayRequest {
   content: OverlayContent

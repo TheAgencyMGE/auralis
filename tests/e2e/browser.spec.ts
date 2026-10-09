@@ -198,6 +198,10 @@ test('downloads finish into the chosen folder', async () => {
     (v) => v === 64 * 1024
   )
   await until(() => h.app.evaluate(() => (globalThis as any).__auralis.ctx.downloads.list()[0]?.state), (v) => v === 'completed')
+  // Mark-of-the-Web: Windows treats the file as coming from the internet.
+  const zone = fs.readFileSync(path.join(dir, 'auralis-test.bin') + ':Zone.Identifier', 'utf8')
+  expect(zone).toContain('ZoneId=3')
+  expect(zone).toContain('HostUrl=' + server.url('/download'))
 })
 
 test('unreachable sites show an explanatory error page', async () => {
@@ -234,6 +238,124 @@ test('session restore brings tabs back asleep after a restart', async () => {
   expect(s.tabs[0].url).toContain('/a')
   expect(s.tabs[0].asleep).toBe(true)
   expect(s.tabs[1].url).toContain('/c')
+})
+
+test('session restore ignores unsafe URLs in a tampered session file', async () => {
+  const profile = tempProfile()
+  h = await launch(profile)
+  await omniboxGo(h, server.url('/a'))
+  await until(h.state, (s) => s.tabs[0].title === 'Page A')
+  await h.close()
+  const file = path.join(profile, 'session.json')
+  const session = JSON.parse(fs.readFileSync(file, 'utf8'))
+  const good = session.windows[0].tabs[0]
+  session.windows[0].tabs.push(
+    { ...good, id: 900, url: 'javascript:alert(1)', entries: [{ url: 'javascript:alert(1)', title: 'x' }] },
+    { ...good, id: 901, url: 'auralis://chrome/', entries: [] },
+    { ...good, id: 902, url: server.url('/c'), entries: [{ url: 'data:text/html,<script>1</script>', title: '' }, { url: server.url('/c'), title: 'C' }], index: 1 }
+  )
+  fs.writeFileSync(file, JSON.stringify(session))
+  h = await launch(profile)
+  const s = await until(h.state, (s) => s.tabs.length >= 2)
+  expect(s.tabs.map((t) => t.url)).toEqual([server.url('/a'), server.url('/c')])
+})
+
+test('a crashed tab shows a recovery panel and reloads', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/a'))
+  await until(h.state, (s) => s.tabs[0].title === 'Page A')
+  await h.app.evaluate(() => {
+    const w = [...(globalThis as any).__auralis.BrowserWin.all.values()][0] as any
+    w.activeTab.wc.forcefullyCrashRenderer()
+  })
+  await expect(h.chrome.locator('.crash-panel h1')).toHaveText('This tab stopped working')
+  await h.chrome.locator('.crash-panel button', { hasText: 'Reload page' }).click()
+  await expect(h.chrome.locator('.crash-panel')).toHaveCount(0)
+  await until(h.state, (s) => s.tabs[0].title === 'Page A')
+})
+
+test('permission prompts ask once and remember the answer', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/geo'))
+  await until(h.state, (s) => s.tabs[0].title === 'Geo')
+  const page = await h.page(server.url('/geo'))
+  await page.click('#ask')
+  await until(h.state, (s) => s.overlay === 'permission')
+  await expect(h.overlay.locator('.perm-list li')).toHaveText(['Know your location'])
+  await h.overlay.locator('button', { hasText: 'Block' }).click()
+  await until(h.state, (s) => s.tabs[0].title === 'geo denied 1')
+  const stored = await h.app.evaluate((_e, origin) => (globalThis as any).__auralis.ctx.permissions.get(origin, 'geolocation'), new URL(server.url('/')).origin)
+  expect(stored).toBe('deny')
+  // Asking again is answered from memory without a prompt.
+  await page.evaluate(() => (document.title = 'again'))
+  await page.click('#ask')
+  await until(h.state, (s) => s.tabs[0].title === 'geo denied 1')
+  expect((await h.state()).overlay).toBeNull()
+})
+
+test('screen sharing asks the user to pick a source', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/share'))
+  await until(h.state, (s) => s.tabs[0].title === 'Share')
+  const page = await h.page(server.url('/share'))
+  await page.click('#share')
+  await until(h.state, (s) => s.overlay === 'screens')
+  await h.overlay.locator('button', { hasText: 'Cancel' }).click()
+  await until(h.state, (s) => s.tabs[0].title === 'share NotAllowedError')
+  await page.click('#share')
+  await until(h.state, (s) => s.overlay === 'screens')
+  await h.overlay.locator('.screen-card').first().click()
+  await h.overlay.locator('button', { hasText: 'Share' }).click()
+  await until(h.state, (s) => s.tabs[0].title === 'shared 1')
+})
+
+test('tearing a tab off opens it in a new window with its history', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/a'))
+  await until(h.state, (s) => s.tabs[0].title === 'Page A')
+  await omniboxGo(h, server.url('/b'))
+  await until(h.state, (s) => s.tabs[0].title === 'Page B')
+  await h.press('tab', 'T', ['control'])
+  await until(h.state, (s) => s.tabs.length === 2)
+  const id = (await h.state()).tabs[0].id
+  // Dropped far away from any Auralis window.
+  await h.chrome.evaluate((id) => (window as any).auralis.call('tab.detach', id, { x: -30000, y: -30000 }), id)
+  const windows = await until(
+    () => h.app.evaluate(() => [...(globalThis as any).__auralis.BrowserWin.all.values()].map((w: any) => w.visibleTabs().map((t: any) => t.displayUrl()))),
+    (w) => w.length === 2 && w[1].length === 1 && w[1][0].endsWith('/b')
+  )
+  expect(windows[0]).toEqual(['auralis://newtab/'])
+  const canGoBack = await until(
+    () => h.app.evaluate(() => [...(globalThis as any).__auralis.BrowserWin.all.values()][1].activeTab?.wc?.navigationHistory.canGoBack()),
+    (v) => v === true
+  )
+  expect(canGoBack).toBe(true)
+})
+
+// FIXME: relaunch after SIGKILL is not yet reliable under Playwright (single-instance lock held by orphaned helpers).
+test.fixme('after the browser itself crashes, the session comes back asleep', async () => {
+  const profile = tempProfile()
+  h = await launch(profile)
+  await h.app.evaluate(() => (globalThis as any).__auralis.settings.set({ startup: 'newtab' }))
+  await omniboxGo(h, server.url('/a'))
+  await until(h.state, (s) => s.tabs[0].title === 'Page A')
+  await wait(1600) // the session file is written on a 1 s debounce
+  h.app.process().kill('SIGKILL')
+  // Chromium's helper processes notice the dead parent within a moment and
+  // release the single-instance lock; until then a new launch defers to them.
+  for (let attempt = 0; ; attempt++) {
+    await wait(1500)
+    try {
+      h = await launch(profile)
+      break
+    } catch (err) {
+      if (attempt >= 5) throw err
+    }
+  }
+  const s = await until(h.state, (s) => s.tabs.some((t) => t.url.endsWith('/a')))
+  expect(s.tabs.find((t) => t.url.endsWith('/a'))).toBeTruthy()
+  const log = fs.readFileSync(path.join(profile, 'logs', 'auralis.log'), 'utf8')
+  expect(log).toContain('previous session did not exit cleanly')
 })
 
 test('settings persist and are sanitized', async () => {

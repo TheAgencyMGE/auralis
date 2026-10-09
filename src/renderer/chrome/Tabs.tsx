@@ -22,6 +22,7 @@ export function TabStrip({ state, settings, menuAnchor }: { state: WindowState |
   const stripRef = useRef<HTMLDivElement>(null)
   const [stripW, setStripW] = useState(800)
   const [drag, setDrag] = useState<Drag | null>(null)
+  const [dragY, setDragY] = useState(0)
   const previewTimer = useRef<number | null>(null)
   const previewOpen = useRef(false)
   const tabs = state?.tabs ?? []
@@ -75,6 +76,8 @@ export function TabStrip({ state, settings, menuAnchor }: { state: WindowState |
 
   const onPointerMove = (e: RPointerEvent) => {
     if (!drag) return
+    const strip = stripRef.current?.getBoundingClientRect()
+    setDragY(strip ? Math.max(e.clientY - strip.bottom, strip.top - e.clientY, 0) : 0)
     const dx = e.clientX - drag.startX
     if (!drag.active && Math.abs(dx) < 5) return
     if (!drag.active) hidePreview(true)
@@ -99,8 +102,16 @@ export function TabStrip({ state, settings, menuAnchor }: { state: WindowState |
     return idx
   }
 
-  const onPointerUp = (t: TabState) => {
+  const onPointerUp = (t: TabState, e: RPointerEvent) => {
     if (!drag) return
+    // Released well outside the tab strip: tear the tab off.
+    const strip = stripRef.current?.getBoundingClientRect()
+    const outside = !!strip && drag.active && (e.clientY < strip.top - 50 || e.clientY > strip.bottom + 50 || e.clientX < -20 || e.clientX > window.innerWidth + 20)
+    if (outside) {
+      void call('tab.detach', t.id, { x: e.screenX, y: e.screenY })
+      setDrag(null)
+      return
+    }
     if (drag.active) {
       const to = targetIndex(drag)
       if (to !== drag.fromIndex) void call('tab.move', t.id, to)
@@ -160,9 +171,10 @@ export function TabStrip({ state, settings, menuAnchor }: { state: WindowState |
             width={widthOf(t)}
             shift={shiftFor(i)}
             dragging={drag?.active === true && drag.id === t.id}
+            tearing={!!drag?.active && drag.id === t.id && Math.abs(dragY) > 50}
             onPointerDown={(e) => onPointerDown(e, t, i)}
             onPointerMove={onPointerMove}
-            onPointerUp={() => onPointerUp(t)}
+            onPointerUp={(e) => onPointerUp(t, e)}
             onHover={(el) => schedulePreview(t, el)}
             onLeave={() => hidePreview()}
             onKeyDown={(e) => onKeyDown(e, i)}
@@ -184,9 +196,10 @@ function Tab(props: {
   width: number
   shift: number
   dragging: boolean
+  tearing: boolean
   onPointerDown: (e: RPointerEvent) => void
   onPointerMove: (e: RPointerEvent) => void
-  onPointerUp: () => void
+  onPointerUp: (e: RPointerEvent) => void
   onHover: (el: HTMLElement) => void
   onLeave: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
@@ -206,6 +219,7 @@ function Tab(props: {
     tab.asleep ? 'is-asleep' : '',
     props.inSplit ? 'is-split' : '',
     props.dragging ? 'is-dragging' : '',
+    props.tearing ? 'is-tearing' : '',
     props.shift && !props.dragging ? 'is-shifting' : '',
     compact ? 'is-compact' : ''
   ]

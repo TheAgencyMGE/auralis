@@ -90,12 +90,35 @@ export function installDownloads(ses: Session, incognito: boolean): void {
       state.endTime = Date.now()
       state.speed = 0
       persist(entry)
-      if (state.state === 'completed') onComplete(state)
+      if (state.state === 'completed') {
+        // The redirect chain's first URL is where the download was requested from.
+        markOfTheWeb(state.path, state.url, item.getURLChain()[0] ?? '')
+        onComplete(state)
+      }
       log.info('download', state.state, state.filename)
       notify(true)
     })
     notify(true)
   })
+}
+
+/**
+ * Tag the file as downloaded from the internet (NTFS Zone.Identifier stream),
+ * so SmartScreen, Office Protected View and "This file came from another
+ * computer" all apply, exactly as with Edge or Chrome.
+ */
+export function markOfTheWeb(file: string, url: string, referrer: string): void {
+  if (process.platform !== 'win32' || !file) return
+  const safe = (u: string) => (/^https?:\/\//i.test(u) ? u.replace(/[\r\n]/g, '') : '')
+  const lines = ['[ZoneTransfer]', 'ZoneId=3']
+  if (safe(referrer)) lines.push(`ReferrerUrl=${safe(referrer)}`)
+  if (safe(url)) lines.push(`HostUrl=${safe(url)}`)
+  try {
+    fs.writeFileSync(`${file}:Zone.Identifier`, lines.join('\r\n') + '\r\n')
+  } catch (err) {
+    // Non-NTFS volumes (FAT32 USB sticks) have no alternate data streams.
+    log.debug('could not write Zone.Identifier', err)
+  }
 }
 
 function persist(entry: Live): void {

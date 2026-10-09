@@ -8,7 +8,7 @@ import fs from 'node:fs'
 
 const [profile, outDir, scenario = 'basic'] = process.argv.slice(2)
 fs.mkdirSync(outDir, { recursive: true })
-const app = await electron.launch({ args: ['.'], env: { ...process.env, AURALIS_E2E: '1', AURALIS_USER_DATA: profile } })
+const app = await electron.launch({ args: ['.', ...(process.env.EXTRA_ARGS ? process.env.EXTRA_ARGS.split(' ') : [])], env: { ...process.env, AURALIS_E2E: '1', AURALIS_USER_DATA: profile } })
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 const shot = (name) => {
   execFileSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts/shot.ps1', '-Out', path.join(outDir, `${name}.png`)], { stdio: 'inherit' })
@@ -103,6 +103,13 @@ try {
     await wait(1500)
     shot('l3-settings')
     await run('new-private'); await wait(2500); shot('l4-private')
+  }
+  if (scenario === 'dpi') {
+    await app.evaluate(() => { const a = globalThis.__auralis; const w = [...a.BrowserWin.all.values()][0]; w.win.setBounds({ x: 40, y: 40, width: 1000, height: 640 }); w.activeTab.navigate('https://en.wikipedia.org/wiki/Glass') })
+    await wait(4000)
+    shot('dpi')
+    const geo = await app.evaluate(({ screen }) => { const a = globalThis.__auralis; const w = [...a.BrowserWin.all.values()][0]; return { view: w.activeTab.view.getBounds(), vp: w.viewport, content: w.win.getContentSize(), scale: screen.getPrimaryDisplay().scaleFactor } })
+    console.log(JSON.stringify(geo))
   }
 } catch (err) {
   console.error(err)

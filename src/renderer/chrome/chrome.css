@@ -1025,3 +1025,11 @@ button.status-cell:hover {
   background: rgba(255, 255, 255, 0.35);
   border-radius: 3px;
 }
+
+/* A tab dragged out of the strip lifts off, ready to become a window. */
+.tab.is-tearing {
+  opacity: 0.75;
+  box-shadow:
+    0 10px 24px rgba(0, 20, 50, 0.45),
+    0 0 0 2px rgba(120, 210, 255, 0.8);
+}

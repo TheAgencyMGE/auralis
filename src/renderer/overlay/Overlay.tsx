@@ -1,7 +1,7 @@
 // Draws whatever the main process asks for above web content, measures
 // it, and reports the size so the overlay view can be fitted around it.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import type { DownloadItemState, MenuItem, OverlayContent, Space, SpaceColor, TabThumb } from '@shared/types'
+import type { DownloadItemState, MenuItem, OverlayContent, ScreenSource, Space, SpaceColor, TabThumb } from '@shared/types'
 import { applyFrameTokens, bridge, call, formatBytes } from '@ui/api'
 import { COMMAND_ICONS, Favicon, Icon } from '@ui/icons'
 import { Orb } from '@ui/Orb'
@@ -73,6 +73,7 @@ export function OverlayApp() {
       <div className="ov-modal" ref={popupRef} onMouseDown={(e) => e.target === e.currentTarget && close()}>
         {c.kind === 'tabflip' && <TabFlip key={msg.token} tabs={c.tabs} spaces={c.spaces} />}
         {c.kind === 'palette' && <Palette key={msg.token} initial={c.query} />}
+        {c.kind === 'screens' && <ScreenPicker key={msg.token} origin={c.origin} audio={c.audio} sources={c.sources} />}
       </div>
     )
   }
@@ -835,6 +836,64 @@ function TabFlip({ tabs, spaces }: { tabs: TabThumb[]; spaces: Space[] }) {
         {filtered.length === 0 && <div className="flip-none">No open tabs match “{q}”.</div>}
       </div>
       <div className="flip-hint">Press Enter to switch, Delete to close a tab, or Esc to go back.</div>
+    </div>
+  )
+}
+
+// ---- screen sharing picker ------------------------------------------------------------------------------------
+
+function ScreenPicker({ origin, audio, sources }: { origin: string; audio: boolean; sources: ScreenSource[] }) {
+  const [tab, setTab] = useState<'screen' | 'window'>('screen')
+  const [picked, setPicked] = useState<string | null>(null)
+  const [shareAudio, setShareAudio] = useState(false)
+  const shown = sources.filter((s) => s.kind === tab)
+  const pick = sources.find((s) => s.id === picked)
+  return (
+    <div className="screens" role="dialog" aria-label="Choose what to share">
+      <div className="screens-head">
+        <Icon name="pip" size={20} />
+        <div>
+          <div className="confirm-title">Choose what to share</div>
+          <div className="confirm-msg">{origin.replace(/^https?:\/\//, '')} will be able to see what you choose.</div>
+        </div>
+      </div>
+      <div className="screens-tabs" role="tablist">
+        {(['screen', 'window'] as const).map((k) => (
+          <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'is-on' : ''} onClick={() => setTab(k)}>
+            {k === 'screen' ? 'Entire screen' : 'Window'}
+          </button>
+        ))}
+      </div>
+      <div className="screens-grid">
+        {shown.map((s) => (
+          <button
+            key={s.id}
+            className={`screen-card sel${picked === s.id ? ' is-selected' : ''}`}
+            onClick={() => setPicked(s.id)}
+            onDoubleClick={() => act('share', { id: s.id, audio: shareAudio })}
+          >
+            <img src={s.thumbnail} alt="" />
+            <span className="screen-name">
+              {s.icon && <img src={s.icon} width={16} height={16} alt="" />}
+              {s.name}
+            </span>
+          </button>
+        ))}
+        {shown.length === 0 && <div className="panel-empty">Nothing to share here.</div>}
+      </div>
+      <div className="confirm-actions">
+        {audio && pick?.kind === 'screen' && (
+          <label className="screens-audio">
+            <input type="checkbox" className="check" checked={shareAudio} onChange={(e) => setShareAudio(e.target.checked)} /> Also share system audio
+          </label>
+        )}
+        <button className="btn" onClick={() => act('cancel')}>
+          Cancel
+        </button>
+        <button className="btn is-default" disabled={!pick} onClick={() => act('share', { id: picked, audio: shareAudio })}>
+          Share
+        </button>
+      </div>
     </div>
   )
 }

@@ -180,7 +180,8 @@ export function installShieldIpc(): void {
   if (ipcInstalled) return
   ipcInstalled = true
   ipcMain.handle('@ghostery/adblocker/inject-cosmetic-filters', (event: IpcMainInvokeEvent, url: unknown, msg: unknown) => {
-    if (!engine || typeof url !== 'string') return
+    if (!engine || typeof url !== 'string' || url.length > 8192 || !/^https?:/.test(url)) return
+    if (msg !== undefined && (typeof msg !== 'object' || msg === null || JSON.stringify(msg).length > 1_000_000)) return
     const top = event.sender.getURL()
     if (!isShieldActiveFor(top)) return
     return engine.onInjectCosmeticFilters(event, url, msg as Parameters<ElectronBlocker['onInjectCosmeticFilters']>[2])

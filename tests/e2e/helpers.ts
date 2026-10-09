@@ -104,6 +104,18 @@ const routes: Record<string, (req: http.IncomingMessage, res: http.ServerRespons
     r.end(Buffer.alloc(64 * 1024, 7))
   },
   '/article': (_q, r) => html(r, 'A long read about glass', `<article><h1>A long read about glass</h1>${article}</article>`),
+  '/geo': (_q, r) =>
+    html(
+      r,
+      'Geo',
+      `<button id="ask" onclick="navigator.geolocation.getCurrentPosition(() => document.title = 'geo ok', (e) => document.title = 'geo denied ' + e.code)">ask</button>`
+    ),
+  '/share': (_q, r) =>
+    html(
+      r,
+      'Share',
+      `<button id="share" onclick="navigator.mediaDevices.getDisplayMedia({ video: true }).then((s) => { document.title = 'shared ' + s.getVideoTracks().length; s.getTracks().forEach((t) => t.stop()) }, (e) => { document.title = 'share ' + e.name })">share</button>`
+    ),
   '/hostile': (_q, r) =>
     html(
       r,

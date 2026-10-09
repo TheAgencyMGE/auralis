@@ -15,6 +15,7 @@ const CHROME = [
   'tab.close',
   'tab.activate',
   'tab.move',
+  'tab.detach',
   'tab.menu',
   'tab.preview',
   'tab.toggleMute',

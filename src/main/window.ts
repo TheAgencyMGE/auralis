@@ -107,14 +107,22 @@ export class BrowserWin implements TabHost {
   chromeReady = false
   private onChromeReady: (() => void)[] = []
 
-  constructor(opts: { incognito?: boolean; snapshot?: WindowSnapshot; initialUrls?: string[]; restoreAsleep?: boolean } = {}) {
+  constructor(
+    opts: {
+      incognito?: boolean
+      snapshot?: WindowSnapshot
+      initialUrls?: string[]
+      restoreAsleep?: boolean
+      bounds?: { x: number; y: number; width: number; height: number }
+    } = {}
+  ) {
     this.incognito = !!opts.incognito
     this.session = this.incognito ? session.fromPartition(`auralis-private-${++privateCounter}`) : session.defaultSession
     setupWebSession(this.session, { incognito: this.incognito })
 
     const s = settings.get()
     const snap = opts.snapshot
-    const b = snap?.bounds
+    const b = snap?.bounds ?? opts.bounds
     this.win = new BrowserWindow({
       width: b?.width ?? 1280,
       height: b?.height ?? 820,
@@ -211,7 +219,9 @@ export class BrowserWin implements TabHost {
     BrowserWin.lastFocused = this
 
     if (snap?.tabs.length) this.restore(snap, opts.restoreAsleep ?? true)
-    else {
+    else if (opts.initialUrls && opts.initialUrls.length === 0) {
+      // Tabs are about to be moved in (tear-off); start empty.
+    } else {
       const urls = opts.initialUrls?.length ? opts.initialUrls : [NEW_TAB_URL]
       urls.forEach((url, i) => this.createTab({ url, spaceId: this.activeSpaceId }, { activate: i === 0 }))
     }
@@ -402,16 +412,22 @@ export class BrowserWin implements TabHost {
     for (const t of v.slice(v.indexOf(tab) + 1)) if (!t.pinned) this.closeTab(t)
   }
 
-  /** Move a tab (with its live page) into another window. */
-  moveTabToWindow(tab: Tab, target: BrowserWin | null): void {
-    const dest = target ?? new BrowserWin({ incognito: this.incognito, initialUrls: [] })
+  /** Move a tab, with its back/forward history, into another window. */
+  moveTabToWindow(tab: Tab, target: BrowserWin | null, at?: { x: number; y: number }): void {
+    const size = this.win.getNormalBounds()
+    const dest =
+      target ??
+      new BrowserWin({
+        incognito: this.incognito,
+        initialUrls: [],
+        bounds: at ? { x: at.x - 120, y: at.y - 20, width: size.width, height: size.height } : undefined
+      })
     if (dest.incognito !== this.incognito) return
     const wc = tab.wc
     const entries = wc?.navigationHistory.getAllEntries()
     const index = wc?.navigationHistory.getActiveIndex()
-    dest.createTab({ url: tab.displayUrl(), title: tab.title, entries, index, pinned: tab.pinned }, { activate: true })
-    // Freshly created windows start with a new tab page; drop it.
-    if (!target) for (const t of dest.tabs.slice(0, -1)) dest.closeTab(t)
+    dest.createTab({ url: tab.displayUrl(), title: tab.title, entries, index, pinned: tab.pinned, spaceId: dest.activeSpaceId }, { activate: true })
+    dest.win.focus()
     this.closeTab(tab)
   }
 
@@ -845,9 +861,19 @@ export class BrowserWin implements TabHost {
   }
 
   private restore(snap: WindowSnapshot, asleep: boolean): void {
-    this.spaces = snap.spaces.length ? snap.spaces : this.spaces
+    // The session file is data from disk: keep only well-formed spaces and
+    // tabs whose URLs a tab may legitimately show.
+    const spaces = (Array.isArray(snap.spaces) ? snap.spaces : []).filter(
+      (s) => s && typeof s.id === 'string' && typeof s.name === 'string' && SPACE_COLORS.includes(s.color)
+    )
+    this.spaces = spaces.length ? spaces.map((s) => ({ id: s.id.slice(0, 40), name: s.name.slice(0, 40), color: s.color })) : this.spaces
     const idMap = new Map<number, Tab>()
-    for (const t of snap.tabs) {
+    for (const raw of Array.isArray(snap.tabs) ? snap.tabs : []) {
+      if (!raw || typeof raw.url !== 'string' || !isRestorableUrl(raw.url)) continue
+      const entries = Array.isArray(raw.entries)
+        ? raw.entries.filter((e) => e && typeof e.url === 'string' && isRestorableUrl(e.url)).slice(-50)
+        : undefined
+      const t = { ...raw, title: typeof raw.title === 'string' ? raw.title.slice(0, 1024) : '', entries, index: entries?.length ? Math.min(Math.max(0, Number(raw.index) || 0), entries.length - 1) : undefined }
       const spaceId = this.spaces.some((s) => s.id === t.spaceId) ? t.spaceId : this.spaces[0].id
       const tab = new Tab(this, {
         spaceId,
@@ -882,6 +908,13 @@ export function watchUiConsole(wc: WebContents, name: string): void {
   })
   wc.on('did-fail-load', (_e, code, desc, url) => ui.error('failed to load', code, desc, url))
   wc.on('preload-error', (_e, path, err) => ui.error('preload error', path, err))
+}
+
+/** URLs a restored tab may load: web, local files and Auralis' own pages. */
+export function isRestorableUrl(url: string): boolean {
+  if (url === 'about:blank') return true
+  if (/^(https?|file):/i.test(url)) return true
+  return internalPage(url) !== null && internalPage(url) !== 'error'
 }
 
 function hostOfSafe(url: string): string {

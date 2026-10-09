@@ -1,6 +1,6 @@
 // Configuration shared by every session that hosts web content: the
 // persistent default profile and each InPrivate window's in-memory session.
-import { app, session, type Session, type WebContents, type Certificate } from 'electron'
+import { app, session, webContents, type Session, type WebContents, type Certificate } from 'electron'
 import { ctx, settings } from './context'
 import { installProtocol } from './protocol'
 import { installShield } from './shield'
@@ -52,6 +52,12 @@ export type PromptResult = 'allow' | 'deny' | 'dismiss'
 type Prompter = (wc: WebContents, origin: string, permissions: string[], extra?: { externalUrl?: string }) => Promise<PromptResult>
 let prompter: Prompter = async () => 'deny'
 export const setPermissionPrompter = (p: Prompter) => (prompter = p)
+
+type ScreenPicker = (wc: WebContents, origin: string, audio: boolean) => Promise<{ id: string; name: string; audio: boolean } | null>
+let screenPicker: ScreenPicker = async () => null
+export const setScreenPicker = (p: ScreenPicker) => (screenPicker = p)
+/** Source chosen during the permission step, consumed by the display-media handler. */
+const pendingShares = new Map<number, { id: string; name: string; audio: boolean }>()
 
 function expand(permission: string, mediaTypes?: string[]): string[] {
   if (permission !== 'media') return [permission]
@@ -106,9 +112,25 @@ export function setupWebSession(ses: Session, opts: { incognito: boolean }): voi
       return
     }
 
-    const wanted = expand(permission, 'mediaTypes' in details ? (details.mediaTypes as string[] | undefined) : undefined)
+    const mediaTypes = 'mediaTypes' in details ? (details.mediaTypes as string[] | undefined) : undefined
+    // getDisplayMedia arrives as "media" with no media types. The user picks
+    // a screen or window here, so cancelling rejects with NotAllowedError as
+    // in Chrome; the display-media handler then uses the chosen source.
+    if (permission === 'media' && Array.isArray(mediaTypes) && mediaTypes.length === 0) {
+      if (!isPotentiallyTrustworthy(origin)) return callback(false)
+      screenPicker(wc, origin, true).then(
+        (pick) => {
+          if (pick) pendingShares.set(wc.id, pick)
+          callback(!!pick)
+        },
+        () => callback(false)
+      )
+      return
+    }
+    const wanted = expand(permission, mediaTypes)
     if (!wanted.every((p) => PROMPTABLE.has(p))) return callback(false)
-    if (!origin.startsWith('https:') && !origin.startsWith('http://localhost')) return callback(false)
+    // Powerful features need a secure context (Chromium counts loopback as secure).
+    if (!isPotentiallyTrustworthy(origin)) return callback(false)
 
     const store = ctx.permissions
     const decisions = wanted.map((p) => (opts.incognito ? sessionDecisions.get(`${origin}|${p}`) : store.get(origin, p)) ?? null)
@@ -138,11 +160,37 @@ export function setupWebSession(ses: Session, opts: { incognito: boolean }): voi
     return wanted.every((p) => (opts.incognito ? sessionDecisions.get(`${origin}|${p}`) : ctx.permissions.get(origin, p)) === 'allow')
   })
 
+  // Screen sharing: the user picks a screen or window, every time.
+  ses.setDisplayMediaRequestHandler(async (request, callback) => {
+    try {
+      const wc = request.frame ? webContents.fromFrame(request.frame) : null
+      if (!wc || !request.videoRequested || !isPotentiallyTrustworthy(request.securityOrigin)) return callback(null)
+      const pick = pendingShares.get(wc.id) ?? (await screenPicker(wc, request.securityOrigin, request.audioRequested))
+      pendingShares.delete(wc.id)
+      if (!pick) return callback(null)
+      callback({ video: { id: pick.id, name: pick.name }, audio: pick.audio && request.audioRequested ? 'loopback' : undefined })
+    } catch (err) {
+      log.warn('display media request failed', err)
+      callback(null)
+    }
+  })
+
   // USB / HID / serial / Bluetooth device access is not offered.
   ses.setDevicePermissionHandler(() => false)
   ses.on('select-hid-device', (e, _d, cb) => (e.preventDefault(), cb('')))
   ses.on('select-serial-port', (e, _d, _wc, cb) => (e.preventDefault(), cb('')))
   ses.on('select-usb-device', (e, _d, cb) => (e.preventDefault(), cb()))
+}
+
+export function isPotentiallyTrustworthy(origin: string): boolean {
+  try {
+    const u = new URL(origin)
+    if (u.protocol === 'https:') return true
+    if (u.protocol !== 'http:') return false
+    return u.hostname === 'localhost' || u.hostname.endsWith('.localhost') || u.hostname === '127.0.0.1' || u.hostname === '[::1]'
+  } catch {
+    return false
+  }
 }
 
 /** InPrivate decisions live only as long as the process. */

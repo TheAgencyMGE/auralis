@@ -138,6 +138,20 @@ const handlers: Record<string, Handler> = {
   'tab.close': (c, id) => needWin(c).closeTab(tabArg(c, id)),
   'tab.activate': (c, id) => needWin(c).activate(tabArg(c, id)),
   'tab.move': (c, id, index) => needWin(c).moveTab(tabArg(c, id), int(index)),
+  'tab.detach': (c, id, at) => {
+    const w = needWin(c)
+    const tab = tabArg(c, id)
+    const p = obj(at)
+    const point = { x: Math.round(num(p.x)), y: Math.round(num(p.y)) }
+    // Dropped on another window of the same kind: join it. Otherwise: a new window.
+    const target = [...BrowserWin.all.values()].find((o) => {
+      if (o === w || o.incognito !== w.incognito || o.win.isMinimized()) return false
+      const b = o.win.getBounds()
+      return point.x >= b.x && point.x < b.x + b.width && point.y >= b.y && point.y < b.y + b.height
+    })
+    if (!target && w.tabs.filter((t) => !t.closing).length === 1) return
+    w.moveTabToWindow(tab, target ?? null, target ? undefined : point)
+  },
   'tab.menu': (c, id, anchor) => menus.showTabMenu(needWin(c), tabArg(c, id), rect(anchor)),
   'tab.toggleMute': (c, id) => {
     const t = tabArg(c, id)
