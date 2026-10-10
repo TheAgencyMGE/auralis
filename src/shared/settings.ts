@@ -55,8 +55,16 @@ export const LIVE_WALLPAPERS = {
   koi: { name: 'Koi', credit: 'Samuel Sobrinho', source: 'https://www.pexels.com/video/3582903/', tone: 'light' },
   jellyfish: { name: 'Jellyfish', credit: 'Chris Munnik', source: 'https://www.pexels.com/video/4805827/', tone: 'dark' },
   droplet: { name: 'Droplet', credit: 'Pixabay', source: 'https://www.pexels.com/video/855494/', tone: 'light' },
-  borealis: { name: 'Northern Lights', credit: 'Nico Becker', source: 'https://www.pexels.com/video/5600929/', tone: 'dark' }
+  borealis: { name: 'Northern Lights', credit: 'Nico Becker', source: 'https://www.pexels.com/video/5600929/', tone: 'dark' },
+  rain: { name: 'Rain on Glass', credit: 'Zuzanna Musial', source: 'https://www.pexels.com/video/5366344/', tone: 'light' },
+  turbines: { name: 'Wind Farm', credit: 'Pixabay', source: 'https://www.pexels.com/video/855181/', tone: 'light' },
+  dusk: { name: 'City at Dusk', credit: 'William Chen', source: 'https://www.pexels.com/video/14563249/', tone: 'light' },
+  waterfall: { name: 'Rainforest Falls', credit: 'Greg Benson', source: 'https://www.pexels.com/video/10761087/', tone: 'dark' },
+  shoal: { name: 'School of Fish', credit: 'Daniel Torobekov', source: 'https://www.pexels.com/video/5277924/', tone: 'dark' }
 } as const
+
+/** Wallpapers added in the latest release get a "New" badge in the picker. */
+export const NEW_WALLPAPERS: readonly WallpaperId[] = ['live:rain', 'live:turbines', 'live:dusk', 'live:waterfall', 'live:shoal']
 
 export type PhotoWallpaperId = keyof typeof WALLPAPERS
 export type LiveWallpaperId = keyof typeof LIVE_WALLPAPERS
@@ -92,6 +100,28 @@ export function wallpaperInfo(id: WallpaperId): WallpaperInfo {
 
 export const SLEEP_OPTIONS = [0, 5, 15, 30, 60, 120] as const
 
+/** Currencies the currency gadget offers (ECB reference rates via Frankfurter). */
+export const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'BRL', 'SEK', 'NOK', 'NZD', 'KRW', 'SGD', 'HKD', 'ZAR', 'PLN', 'TRY'] as const
+export type Currency = (typeof CURRENCIES)[number]
+
+export const DEFAULT_NEWS_FEED = 'https://feeds.bbci.co.uk/news/rss.xml'
+
+export type Widgets = {
+  clock: boolean
+  weather: boolean
+  notes: boolean
+  meter: boolean
+  topSites: boolean
+  aquarium: boolean
+  analogClock: boolean
+  slideshow: boolean
+  news: boolean
+  currency: boolean
+}
+
+/** Gadgets added in the latest release get a "New" badge in the gadget list. */
+export const NEW_GADGETS: readonly (keyof Widgets)[] = ['analogClock', 'slideshow', 'news', 'currency']
+
 export interface Settings {
   startup: 'restore' | 'newtab' | 'home'
   homePage: string
@@ -112,8 +142,22 @@ export interface Settings {
   downloadDir: string
   askWhereToSave: boolean
   wallpaper: WallpaperId
-  widgets: { clock: boolean; weather: boolean; notes: boolean; meter: boolean; topSites: boolean; aquarium: boolean }
+  widgets: Widgets
   aeroSounds: boolean
+  /** chime and glass splash when Auralis starts */
+  startupSound: boolean
+  splash: boolean
+  /** the Aero "working in background" pointer while the page loads */
+  busyCursor: boolean
+  /** the glass gadget panel at the right of the window */
+  sidebar: boolean
+  newsFeed: string
+  currencyBase: Currency
+  currencyQuotes: Currency[]
+  /** sites whose pop-ups are never blocked */
+  popupAllowlist: string[]
+  /** the Welcome Center has been shown once */
+  welcomed: boolean
   weatherLocation: { name: string; lat: number; lon: number } | null
   temperatureUnit: 'c' | 'f'
   notes: string
@@ -143,8 +187,17 @@ export const DEFAULT_SETTINGS: Settings = {
   downloadDir: '',
   askWhereToSave: false,
   wallpaper: 'live:fields',
-  widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true, aquarium: true },
+  widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true, aquarium: true, analogClock: true, slideshow: false, news: false, currency: false },
   aeroSounds: true,
+  startupSound: true,
+  splash: true,
+  busyCursor: true,
+  sidebar: false,
+  newsFeed: DEFAULT_NEWS_FEED,
+  currencyBase: 'USD',
+  currencyQuotes: ['EUR', 'GBP', 'JPY'],
+  popupAllowlist: [],
+  welcomed: false,
   weatherLocation: null,
   temperatureUnit: 'c',
   notes: '',
@@ -165,6 +218,16 @@ export function isSafeHomePage(url: string): boolean {
   try {
     const u = new URL(url)
     return u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'auralis:'
+  } catch {
+    return false
+  }
+}
+
+/** News feeds are fetched by the main process; only plain web URLs. */
+export function isFeedUrl(url: string): boolean {
+  try {
+    const u = new URL(url)
+    return u.protocol === 'https:' || u.protocol === 'http:'
   } catch {
     return false
   }
@@ -204,9 +267,26 @@ export function sanitizeSettings(input: unknown, base: Settings = DEFAULT_SETTIN
       notes: bool(w.notes, d.widgets.notes),
       meter: bool(w.meter, d.widgets.meter),
       topSites: bool(w.topSites, d.widgets.topSites),
-      aquarium: bool(w.aquarium, d.widgets.aquarium)
+      aquarium: bool(w.aquarium, d.widgets.aquarium),
+      analogClock: bool(w.analogClock, d.widgets.analogClock),
+      slideshow: bool(w.slideshow, d.widgets.slideshow),
+      news: bool(w.news, d.widgets.news),
+      currency: bool(w.currency, d.widgets.currency)
     },
     aeroSounds: bool(s.aeroSounds, d.aeroSounds),
+    startupSound: bool(s.startupSound, d.startupSound),
+    splash: bool(s.splash, d.splash),
+    busyCursor: bool(s.busyCursor, d.busyCursor),
+    sidebar: bool(s.sidebar, d.sidebar),
+    newsFeed: typeof s.newsFeed === 'string' && isFeedUrl(s.newsFeed) ? s.newsFeed.slice(0, 2048) : d.newsFeed,
+    currencyBase: oneOf(s.currencyBase, CURRENCIES, d.currencyBase),
+    currencyQuotes: Array.isArray(s.currencyQuotes)
+      ? [...new Set(s.currencyQuotes.filter((c): c is Currency => (CURRENCIES as readonly unknown[]).includes(c)))].slice(0, 4)
+      : d.currencyQuotes,
+    popupAllowlist: Array.isArray(s.popupAllowlist)
+      ? [...new Set(s.popupAllowlist.filter((h): h is string => typeof h === 'string' && /^[a-z0-9.-]{1,253}$/i.test(h)))].slice(0, 5000)
+      : d.popupAllowlist,
+    welcomed: bool(s.welcomed, d.welcomed),
     weatherLocation:
       s.weatherLocation === null
         ? null

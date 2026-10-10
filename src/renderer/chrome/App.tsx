@@ -2,7 +2,7 @@
 // Favorites command bar, an optional find bar, the web viewport and the
 // status bar. Web pages are separate views the main process places inside
 // the viewport rectangle this component reports.
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Settings } from '@shared/settings'
 import { DEFAULT_SETTINGS } from '@shared/settings'
 import type { WindowState } from '@shared/types'
@@ -10,7 +10,10 @@ import { applyFrameTokens, bridge, call, rectOf } from '@ui/api'
 import { playSound, type SoundName } from '@ui/sound'
 import { TabStrip } from './Tabs'
 import { Toolbar } from './Toolbar'
-import { CaptionButtons, FavoritesBar, FindBar, StatusBar, ViewportFurniture } from './Bars'
+import { CaptionButtons, FavoritesBar, FindBar, InfoBarRow, StatusBar, ViewportFurniture } from './Bars'
+
+// Gadget code loads the first time the Sidebar opens, not with every window.
+const SidePanel = lazy(() => import('./Sidebar').then((m) => ({ default: m.SidePanel })))
 
 export function App() {
   const [state, setState] = useState<WindowState | null>(null)
@@ -64,7 +67,7 @@ export function App() {
   // Rows appearing or disappearing move the viewport without resizing it.
   useLayoutEffect(() => {
     reportLayout()
-  }, [reportLayout, settings.showBookmarksBar, settings.showStatusBar, state?.find.open, state?.maximized, state?.fullscreen, state?.htmlFullscreen])
+  }, [reportLayout, settings.showBookmarksBar, settings.showStatusBar, settings.sidebar, state?.infobar?.id, state?.find.open, state?.maximized, state?.fullscreen, state?.htmlFullscreen])
 
   const setAnchor = useCallback((key: string) => (el: HTMLElement | null) => {
     anchorRefs.current[key] = el
@@ -78,7 +81,8 @@ export function App() {
     state?.focused === false ? 'is-inactive' : '',
     state?.incognito ? 'is-private' : '',
     immersive ? 'is-immersive' : '',
-    settings.transparency ? '' : 'is-opaque'
+    settings.transparency ? '' : 'is-opaque',
+    state?.busy ? 'is-busy' : ''
   ]
     .filter(Boolean)
     .join(' ')
@@ -94,11 +98,19 @@ export function App() {
           <Toolbar state={state} active={active} settings={settings} setAnchor={setAnchor} />
           {settings.showBookmarksBar && <FavoritesBar items={state?.bookmarksBar ?? []} />}
           {state?.find.open && active && <FindBar find={state.find} />}
+          {state?.infobar && <InfoBarRow bar={state.infobar} />}
         </>
       )}
-      <main className="viewport" ref={viewportRef}>
-        <ViewportFurniture state={state} active={active} viewportRef={viewportRef} />
-      </main>
+      <div className="client">
+        <main className="viewport" ref={viewportRef}>
+          <ViewportFurniture state={state} active={active} viewportRef={viewportRef} />
+        </main>
+        {!immersive && settings.sidebar && (
+          <Suspense fallback={<aside className="side-panel" />}>
+            <SidePanel settings={settings} />
+          </Suspense>
+        )}
+      </div>
       {!immersive && settings.showStatusBar && <StatusBar state={state} active={active} />}
     </div>
   )

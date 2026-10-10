@@ -289,3 +289,61 @@ export function topSites(limit = 8) {
     return { ...e, favicon: icon?.data ?? null, accent: icon?.accent ?? null, host: host.replace(/^www\./, '') }
   })
 }
+
+// ---- feeds (RSS/Atom) and currency rates ----------------------------------------------------------
+
+const feedCache = new Map<string, { at: number; text: string }>()
+const FEED_MAX = 3 * 1024 * 1024
+
+/** Fetch a feed as text for the renderer to parse (DOMParser, text only).
+ *  No cookies are sent: a feed is public, and this keeps it from being a
+ *  way to read logged-in pages. */
+export async function fetchFeed(ses: Electron.Session, url: string): Promise<{ text: string; url: string } | { error: string }> {
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return { error: 'That isn’t a valid feed address.' }
+  }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') return { error: 'Only web feeds can be shown.' }
+  const hit = feedCache.get(u.href)
+  if (hit && Date.now() - hit.at < 10 * 60_000) return { text: hit.text, url: u.href }
+  try {
+    const ctl = new AbortController()
+    const timer = setTimeout(() => ctl.abort(), 12_000)
+    const res = await ses.fetch(u.href, { credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl.signal, headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.1' } } as RequestInit)
+    clearTimeout(timer)
+    if (!res.ok) return { error: `The feed server answered ${res.status}.` }
+    const len = Number(res.headers.get('content-length') ?? 0)
+    if (len > FEED_MAX) return { error: 'This feed is too large to show.' }
+    const buf = Buffer.from(await res.arrayBuffer())
+    if (buf.length > FEED_MAX) return { error: 'This feed is too large to show.' }
+    const text = buf.toString('utf8')
+    feedCache.set(u.href, { at: Date.now(), text })
+    if (feedCache.size > 20) feedCache.delete(feedCache.keys().next().value!)
+    return { text, url: res.url || u.href }
+  } catch (err) {
+    log.warn('feed failed', u.href, err)
+    return hit ? { text: hit.text, url: u.href } : { error: 'Auralis couldn’t reach this feed. Check your connection.' }
+  }
+}
+
+const rateCache = new Map<string, { at: number; data: unknown }>()
+
+/** ECB reference rates via Frankfurter (no key, no tracking). */
+export async function currencyRates(base: string, quotes: string[]): Promise<unknown> {
+  const key = `${base}:${quotes.join(',')}`
+  const hit = rateCache.get(key)
+  if (hit && Date.now() - hit.at < 60 * 60_000) return hit.data
+  try {
+    const res = await net.fetch(`https://api.frankfurter.dev/v1/latest?base=${base}&symbols=${quotes.join(',')}`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const json = (await res.json()) as { base: string; date: string; rates: Record<string, number> }
+    const data = { base: json.base, date: json.date, rates: json.rates }
+    rateCache.set(key, { at: Date.now(), data })
+    return data
+  } catch (err) {
+    log.warn('rates failed', err)
+    return hit?.data ?? { error: 'offline' }
+  }
+}

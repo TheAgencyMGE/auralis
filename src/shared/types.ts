@@ -27,6 +27,32 @@ export interface TabState {
   readerable: boolean
   /** true while the omnibox should show the raw URL as typed rather than the page URL */
   isNewTab: boolean
+  /** RSS/Atom feeds the page advertises with <link rel="alternate"> */
+  feeds: FeedLink[]
+  /** media playing (or paused mid-way) in the page, for the mini player */
+  media: MediaState | null
+  /** pop-ups blocked on this page since it loaded */
+  popupsBlocked: number
+}
+
+export interface FeedLink {
+  title: string
+  url: string
+}
+
+export interface MediaState {
+  playing: boolean
+  title: string
+  artist: string
+}
+
+/** The yellow Information Bar under the toolbar. */
+export interface InfoBar {
+  id: string
+  kind: 'popup' | 'download'
+  message: string
+  /** download id for 'download' bars */
+  ref?: string
 }
 
 export interface Space {
@@ -79,6 +105,9 @@ export interface WindowState {
   downloads: { active: number; progress: number; recent: number }
   bookmarksBar: BookmarkNode[]
   status: string
+  infobar: InfoBar | null
+  /** the active tab is loading and the busy pointer is enabled */
+  busy: boolean
 }
 
 export interface BookmarkNode {
@@ -197,6 +226,8 @@ export type OverlayContent =
   | { kind: 'confirm'; title: string; message: string; confirm: string; cancel: string; token: string }
   | { kind: 'toast'; message: string; icon?: string }
   | { kind: 'screens'; origin: string; audio: boolean; sources: ScreenSource[] }
+  | { kind: 'flip3d'; tabs: TabThumb[] }
+  | { kind: 'splash' }
 
 export interface ScreenSource {
   id: string

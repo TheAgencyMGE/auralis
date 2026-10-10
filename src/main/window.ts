@@ -9,14 +9,16 @@ import { ctx, settings } from './context'
 import { setupWebSession } from './web-session'
 import { installProtocol, uiUrl } from './protocol'
 import { IPC_EVENT, type EventName } from '../shared/ipc'
-import { FRAME_COLORS } from '../shared/settings'
 import { NEW_TAB_URL, SCHEME, internalPage } from '../shared/url'
-import type { MenuItem, OverlayContent, OverlayRequest, Rect, Space, SpaceColor, SplitState, WindowState } from '../shared/types'
+import type { InfoBar, MenuItem, OverlayContent, OverlayRequest, Rect, Space, SpaceColor, SplitState, WindowState } from '../shared/types'
 import { logger } from './log'
 import { BAR_ID } from './data/bookmarks'
-import { downloadsSummary } from './downloads'
+import { downloadAction, downloadsSummary } from './downloads'
 
 const log = logger('window')
+
+/** Vista's Aero Basic frame: an opaque pale blue, the same for every colour scheme. */
+export const BASIC_FRAME = '#c5d6ec'
 
 export interface MenuSpec {
   label?: string
@@ -103,6 +105,9 @@ export class BrowserWin implements TabHost {
   private statePending = false
   private htmlFsTab: Tab | null = null
   private popupTimes = new Map<number, number[]>()
+  /** "The download of X has completed." */
+  private downloadNotice: { id: string; filename: string } | null = null
+  private noticeTimer: NodeJS.Timeout | null = null
   private menuActions = new Map<string, () => void>()
   chromeReady = false
   private onChromeReady: (() => void)[] = []
@@ -133,7 +138,7 @@ export class BrowserWin implements TabHost {
       show: false,
       frame: false,
       title: this.incognito ? 'Auralis — InPrivate' : 'Auralis',
-      backgroundColor: s.transparency ? '#00000000' : FRAME_COLORS[s.frameColor].tint,
+      backgroundColor: s.transparency ? '#00000000' : BASIC_FRAME,
       backgroundMaterial: s.transparency ? 'acrylic' : 'none',
       roundedCorners: true,
       icon: path.join(app.getAppPath(), 'build', 'icon.ico'),
@@ -198,8 +203,9 @@ export class BrowserWin implements TabHost {
     const offSettings = settings.onChange((next, prev) => {
       if (next.transparency !== prev.transparency || next.frameColor !== prev.frameColor) {
         this.win.setBackgroundMaterial(next.transparency ? 'acrylic' : 'none')
-        this.win.setBackgroundColor(next.transparency ? '#00000000' : FRAME_COLORS[next.frameColor].tint)
+        this.win.setBackgroundColor(next.transparency ? '#00000000' : BASIC_FRAME)
       }
+      if (next.busyCursor !== prev.busyCursor) this.pushState()
     })
     this.win.once('closed', offSettings)
     this.win.on('close', () => onWindowClosing(this))
@@ -628,6 +634,10 @@ export class BrowserWin implements TabHost {
     if (tab === this.activeTab && !this.overlay.isOpen() && (this.win.isFocused() || !this.chrome.isFocused())) this.focusOmnibox()
   }
 
+  pageFocused(_tab: Tab): void {
+    this.send('page.focus', null)
+  }
+
   keyInput(_tab: Tab, input: Electron.Input): boolean {
     return handleKey(this, input, 'tab')
   }
@@ -679,6 +689,24 @@ export class BrowserWin implements TabHost {
       return { action: 'deny' }
     }
     if (scheme === 'data:' && !/^data:image\//i.test(url)) return { action: 'deny' }
+
+    // IE's pop-up blocker: a pop-up needs a click or key press a moment
+    // before it, unless the user allowed the site. Ctrl/middle-clicked
+    // links (new tabs) always come from the user.
+    const fromInternal = !!tab.wc?.getURL().startsWith(`${SCHEME}:`)
+    const openerHost = hostOfSafe(tab.wc?.getURL() ?? tab.url)
+    const allowed =
+      fromInternal ||
+      disposition === 'foreground-tab' ||
+      disposition === 'background-tab' ||
+      settings.get().popupAllowlist.includes(openerHost) ||
+      tab.consumeGesture()
+    if (!allowed) {
+      if (url) tab.blockedPopups = [...tab.blockedPopups.slice(-19), url]
+      log.info('pop-up blocked from', openerHost)
+      this.pushState()
+      return { action: 'deny' }
+    }
 
     // Rate-limit scripted popups: more than 3 in 5 seconds is a pop-up storm.
     const now = Date.now()
@@ -783,6 +811,62 @@ export class BrowserWin implements TabHost {
     }, 2600)
   }
 
+  // ---- information bar ------------------------------------------------------------------
+
+  showDownloadNotice(id: string, filename: string): void {
+    this.downloadNotice = { id, filename }
+    if (this.noticeTimer) clearTimeout(this.noticeTimer)
+    this.noticeTimer = setTimeout(() => {
+      this.downloadNotice = null
+      this.pushState()
+    }, 30_000)
+    this.pushState()
+  }
+
+  private infobar(): InfoBar | null {
+    const tab = this.activeTab
+    const n = tab?.blockedPopups.length ?? 0
+    if (tab && n > 0) {
+      return {
+        id: `popup:${tab.id}`,
+        kind: 'popup',
+        message: n === 1 ? 'Pop-up blocked. This site tried to open a pop-up window.' : `Pop-ups blocked. This site tried to open ${n} pop-up windows.`
+      }
+    }
+    const d = this.downloadNotice
+    if (d) return { id: `download:${d.id}`, kind: 'download', message: `The download of “${d.filename}” has completed.`, ref: d.id }
+    return null
+  }
+
+  infobarAction(id: string, action: string): void {
+    if (id.startsWith('popup:')) {
+      const tab = this.tabById(Number(id.slice(6)))
+      if (!tab) return
+      const urls = tab.blockedPopups
+      tab.blockedPopups = []
+      if (action === 'always') {
+        const host = hostOfSafe(tab.wc?.getURL() ?? tab.url)
+        if (host) settings.set({ popupAllowlist: [...settings.get().popupAllowlist, host] })
+        for (const url of urls) this.createTab({ url, spaceId: tab.spaceId, openerId: tab.id }, { activate: false, afterOpener: true })
+      } else if (action === 'once' && urls.length) {
+        this.createTab({ url: urls[urls.length - 1], spaceId: tab.spaceId, openerId: tab.id }, { activate: true, afterOpener: true })
+      }
+    } else if (id.startsWith('download:')) {
+      const ref = id.slice(9)
+      if (action === 'open' || action === 'show') void downloadAction(ref, action)
+      this.downloadNotice = null
+    }
+    this.pushState()
+  }
+
+  /** The startup splash: the globe fading in on glass, then out of the way. */
+  splash(): void {
+    this.showOverlay({ content: { kind: 'splash' }, anchor: { x: 0, y: 0, width: 0, height: 0 }, align: 'center', modal: true, passive: true })
+    setTimeout(() => {
+      if (this.overlay.isOpen('splash')) this.overlay.hide()
+    }, 1900)
+  }
+
   // ---- state --------------------------------------------------------------------------
 
   send(name: EventName, payload: unknown): void {
@@ -818,7 +902,9 @@ export class BrowserWin implements TabHost {
       find: active?.find ?? { open: false, text: '', active: 0, matches: 0 },
       downloads: counts,
       bookmarksBar: ctx.bookmarks.children(BAR_ID).map((n) => ({ ...n, favicon: n.url ? (ctx.favicons.get(hostOfSafe(n.url))?.data ?? null) : null })),
-      status: this.status
+      status: this.status,
+      infobar: this.infobar(),
+      busy: !!active?.loading && settings.get().busyCursor
     }
   }
 

@@ -1050,3 +1050,268 @@ button.status-cell:hover {
   color: color-mix(in srgb, var(--gem) 75%, #0b2a4a);
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.95));
 }
+
+/* ---- Aero Basic: transparency off gives Vista's opaque pale-blue frame --------------- */
+
+.frame.is-opaque {
+  --ink-on-glass: #10233d;
+  background:
+    linear-gradient(180deg, #e6eef8 0, #d3e0f1 34px, #c5d6ec 41px, #bfd1e9 100%);
+  box-shadow:
+    inset 0 0 0 1px #5d7ea6,
+    inset 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+.frame.is-opaque.is-inactive {
+  background: linear-gradient(180deg, #eef2f7 0, #e1e8f1 41px, #dbe3ee 100%);
+}
+.frame.is-opaque .glow-text,
+.frame.is-opaque .tab:not(.is-active) .tab-title {
+  color: #10233d;
+  text-shadow: none;
+}
+
+/* ---- the busy pointer while the page loads ------------------------------------------- */
+
+.frame.is-busy,
+.frame.is-busy :where(button, a, .tab, .viewport) {
+  cursor: progress;
+}
+
+/* ---- client area: the page and, beside it, the Sidebar ------------------------------ */
+
+.client {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.client > .viewport {
+  flex: 1;
+  min-width: 0;
+}
+.client:has(.side-panel) > .viewport {
+  margin-right: 0;
+}
+.frame:not(:has(.statusbar)) .side-panel {
+  margin-bottom: var(--edge);
+}
+
+.side-panel {
+  flex: none;
+  width: 236px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0 var(--edge) 0 0;
+  padding-left: 8px;
+  animation: side-in 320ms var(--ease-glass);
+}
+@keyframes side-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+.side-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+}
+.side-title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fs-s);
+}
+.side-btn {
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+}
+.side-btn:hover,
+.side-btn.is-on {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2) 50%, rgba(200, 230, 255, 0.2) 51%, rgba(220, 240, 255, 0.45));
+  box-shadow: 0 0 0 1px rgba(0, 30, 60, 0.3);
+}
+.side-gallery {
+  margin: 2px 0 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(40, 78, 120, 0.55);
+  border-radius: 6px;
+  background: var(--popup-bg);
+  color: var(--ink);
+  box-shadow: 0 6px 16px rgba(0, 15, 35, 0.3);
+}
+.side-gallery-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 24px;
+  font-size: var(--fs-s);
+}
+.side-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 2px 2px 12px 0;
+}
+.side-scroll::-webkit-scrollbar {
+  width: 0;
+}
+.side-empty {
+  margin: 30px 0 0;
+  text-align: center;
+  font-size: var(--fs-s);
+}
+
+/* ---- Information Bar ------------------------------------------------------------------ */
+
+.infobar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  margin: 0 var(--edge);
+  padding: 0 6px 0 9px;
+  background: #ffffe1;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #a8a37a;
+  color: #1a1a1a;
+  font-size: var(--fs-s);
+  animation: infobar-in 220ms ease-out;
+}
+@keyframes infobar-in {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+}
+.infobar-icon {
+  flex: none;
+  color: #c27c00;
+}
+.infobar.is-download .infobar-icon {
+  color: #1f6fc0;
+}
+.infobar-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.infobar-btn {
+  flex: none;
+  height: 22px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: #0b4f9c;
+  font-size: var(--fs-s);
+}
+.infobar-btn:hover {
+  border-color: #c9b25b;
+  background: linear-gradient(180deg, #fffdf0, #fff1b5);
+  text-decoration: underline;
+}
+.infobar-x {
+  flex: none;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: #4b4b4b;
+  display: grid;
+  place-items: center;
+}
+.infobar-x:hover {
+  border-color: #8d2a20;
+  color: #fff;
+  background: linear-gradient(180deg, #f08a72 0%, #d9472d 50%, #c4301c 51%, #db5a3c 100%);
+}
+
+/* ---- mini player: Windows Media Player's black glass, docked in the status bar --------- */
+
+.mini-player {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 21px;
+  max-width: 300px;
+  margin-right: 4px;
+  padding: 0 4px 0 2px;
+  border: 1px solid rgba(0, 0, 0, 0.75);
+  border-radius: 11px;
+  background: linear-gradient(180deg, #5b616a 0%, #2a2e35 48%, #0f1114 52%, #262b31 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(0, 10, 25, 0.35);
+  color: #e9f1fa;
+  text-shadow: none;
+}
+.mp-btn,
+.mp-play,
+.mp-title {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+.mp-btn {
+  width: 19px;
+  height: 17px;
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+}
+.mp-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #9fdcff;
+}
+.mp-play {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid #061a33;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.15) 48%, rgba(255, 255, 255, 0) 52%),
+    radial-gradient(90% 70% at 50% 100%, #6fe0ff 0%, rgba(111, 224, 255, 0) 70%),
+    linear-gradient(180deg, #2f7fd6, #0b3f8a);
+  color: #fff;
+}
+.mp-play:hover {
+  box-shadow: 0 0 6px rgba(110, 210, 255, 0.95);
+}
+.mp-title {
+  min-width: 0;
+  max-width: 180px;
+  margin: 0 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  text-align: left;
+}
+.mp-title:hover {
+  color: #9fdcff;
+}
+
+/* IE7's feed button lights up orange when the page has a feed. */
+.feed-btn img {
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(120, 50, 0, 0.35));
+}

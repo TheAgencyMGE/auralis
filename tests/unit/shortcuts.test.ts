@@ -7,7 +7,7 @@ const { resolveShortcut } = await import('../../src/main/shortcuts')
 import fs from 'node:fs'
 
 // Command ids, read from source so this test can't drift from the registry.
-const COMMANDS_FOR_TEST = [...fs.readFileSync('src/main/commands.ts', 'utf8').matchAll(/\{ id: '([a-z-]+)'/g)].map((m) => m[1])
+const COMMANDS_FOR_TEST = [...fs.readFileSync('src/main/commands.ts', 'utf8').matchAll(/\{ id: '([a-z0-9-]+)'/g)].map((m) => m[1])
 
 const k = (key: string, mods: Partial<{ control: boolean; shift: boolean; alt: boolean }> = {}) =>
   resolveShortcut({ key, control: false, shift: false, alt: false, meta: false, ...mods })

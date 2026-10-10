@@ -16,7 +16,9 @@ export const INTERNAL_PAGES = [
   'taskmanager',
   'reader',
   'error',
-  'about'
+  'about',
+  'welcome',
+  'feed'
 ] as const
 export type InternalPage = (typeof INTERNAL_PAGES)[number]
 

@@ -62,7 +62,10 @@ export default function About() {
       <Group title="Updates" intro="Auralis is built on Electron, which follows Chromium’s security releases. New versions are published as installers; install the latest one over this version to update. Your favorites, history and settings are kept.">
         <span />
       </Group>
-      <Group title="Live wallpapers" intro="Real footage from Pexels, used under the Pexels License. The aquarium gadget plays “An aquarium with many fish and anemones” by Magda Ehlers.">
+      <Group
+        title="Live wallpapers"
+        intro="Real footage from Pexels, used under the Pexels License. The aquarium gadget plays “An aquarium with many fish and anemones” by Magda Ehlers. The startup sound is “Wind chime small” from Pixabay, the clock gadget is “Swiss railway clock” by Jahoe (CC BY-SA 3.0) and the feed icon is Mozilla’s (MPL 1.1)."
+      >
         <dl className="kv">
           {Object.values(LIVE_WALLPAPERS).map((w) => (
             <span key={w.name} style={{ display: 'contents' }}>

@@ -30,6 +30,7 @@ const MIME: Record<string, string> = {
   '.webp': 'image/webp',
   '.mp4': 'video/mp4',
   '.ogg': 'audio/ogg',
+  '.mp3': 'audio/mpeg',
   '.jpg': 'image/jpeg',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',

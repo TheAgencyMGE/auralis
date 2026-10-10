@@ -1,0 +1,463 @@
+/* Sidebar gadgets: shared by the new tab page and the glass Sidebar panel. */
+
+.gadget {
+  position: relative;
+  border-radius: 9px;
+  color: #fff;
+}
+.gadget-msg {
+  font-size: var(--fs-s);
+  line-height: 1.45;
+}
+
+/* Weather: a blue glass gadget. */
+.weather {
+  padding: 12px 14px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.08) 45%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, rgba(40, 130, 210, 0.88) 0%, rgba(12, 70, 140, 0.92) 100%);
+  box-shadow:
+    0 0 0 1px rgba(0, 20, 45, 0.45),
+    0 8px 22px rgba(0, 20, 45, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  text-shadow: 0 1px 2px rgba(0, 20, 45, 0.6);
+}
+.w-now {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.weather-art {
+  filter: drop-shadow(0 2px 3px rgba(0, 20, 45, 0.45));
+}
+.w-temp {
+  font-family: var(--font-light);
+  font-size: 50px;
+  line-height: 1;
+  font-weight: 300;
+}
+.w-temp span {
+  font-size: 30px;
+  vertical-align: top;
+}
+.w-cond {
+  margin-top: 2px;
+  font-size: var(--fs-m);
+}
+.w-place {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-size: var(--fs-s);
+  opacity: 0.9;
+  text-decoration: underline dotted rgba(255, 255, 255, 0.55);
+  text-underline-offset: 3px;
+}
+.w-meta {
+  margin-top: 4px;
+  font-size: var(--fs-xs);
+  opacity: 0.85;
+}
+.w-days {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+.w-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-size: var(--fs-xs);
+}
+.w-hi {
+  font-weight: 600;
+}
+.w-lo {
+  opacity: 0.75;
+}
+.w-credit {
+  margin-top: 8px;
+  font-size: 10px;
+  opacity: 0.7;
+  text-align: right;
+}
+.weather.is-setup .field {
+  width: 100%;
+  margin-top: 6px;
+}
+.loc-results {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+.loc-row,
+.loc-cancel {
+  padding: 5px 6px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  font-size: var(--fs-s);
+}
+.loc-row:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.18);
+}
+.loc-cancel {
+  margin-top: 4px;
+  text-decoration: underline;
+}
+
+/* Notes: Vista's yellow note, slightly lifted at one corner. */
+.notes {
+  padding: 0;
+  background: linear-gradient(170deg, #fff8b8 0%, #fdec7e 70%, #f6dd5a 100%);
+  border: 1px solid #c9ac2d;
+  box-shadow:
+    0 8px 18px rgba(0, 20, 45, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 2px 2px 14px 2px;
+}
+.notes textarea {
+  display: block;
+  width: 100%;
+  height: 150px;
+  padding: 12px 14px;
+  border: 0;
+  resize: vertical;
+  background: transparent;
+  outline: none;
+  font-family: 'Segoe Print', 'Segoe UI', cursive;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #4b3c05;
+}
+.notes textarea::placeholder {
+  color: rgba(75, 60, 5, 0.55);
+}
+
+/* Meter: the black glass CPU gadget. */
+.meter {
+  padding: 12px 10px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, rgba(36, 40, 46, 0.94), rgba(10, 12, 15, 0.96));
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 8px 22px rgba(0, 10, 25, 0.45);
+}
+
+.meter-facts {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 0 4px;
+  font-size: var(--fs-xs);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Browser meter: plain Vista progress bars on black glass. */
+.meter-row {
+  display: grid;
+  grid-template-columns: 54px 1fr 58px;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 2px 8px;
+  font-size: var(--fs-xs);
+  color: rgba(255, 255, 255, 0.85);
+}
+.meter-bar {
+  height: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.meter-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #b6ef8e 0%, #5ac12b 50%, #3ca10f 51%, #79d14a 100%);
+  transition: width 600ms;
+}
+.meter-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* Aquarium gadget: a real aquarium video behind a polished glass front. */
+.aquarium {
+  position: relative;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.05) 51%, rgba(255, 255, 255, 0.2) 100%),
+    rgba(30, 110, 160, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(0, 20, 45, 0.45),
+    0 8px 22px rgba(0, 20, 45, 0.35);
+}
+.aquarium .tank {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 0 0 1px rgba(0, 30, 60, 0.6);
+}
+.aquarium::after {
+  content: '';
+  position: absolute;
+  inset: 7px 7px auto 7px;
+  height: 45%;
+  border-radius: 5px 5px 40% 40% / 5px 5px 16px 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+/* Clock: the Swiss railway clock in a polished steel bezel. */
+.analog {
+  display: grid;
+  place-items: center;
+  padding: 2px 0;
+}
+.analog-face {
+  position: relative;
+  width: 150px;
+  aspect-ratio: 1;
+  padding: 7px;
+  border-radius: 50%;
+  background:
+    linear-gradient(160deg, #ffffff 0%, #c9d1da 30%, #8994a1 52%, #e4e9ee 78%, #9aa5b1 100%);
+  box-shadow:
+    0 0 0 1px rgba(0, 20, 45, 0.55),
+    0 8px 20px rgba(0, 20, 45, 0.4),
+    inset 0 1px 1px #fff;
+}
+.analog-face svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+/* the curved glass over the dial */
+.analog-face::after {
+  content: '';
+  position: absolute;
+  inset: 9px 18px 52% 18px;
+  border-radius: 50% 50% 45% 45% / 70% 70% 30% 30%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.04));
+  pointer-events: none;
+}
+
+/* Slide Show: a black glass picture frame. */
+.slideshow {
+  padding: 6px 6px 0;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0) 41%),
+    linear-gradient(180deg, #3a3f46, #0e1013);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 8px 22px rgba(0, 10, 25, 0.45);
+}
+.slide-frame {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #000;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.slide {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: slide-in 700ms ease-out both;
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+  }
+}
+.slide-bar,
+.hl-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: 24px;
+  font-size: var(--fs-xs);
+  color: rgba(255, 255, 255, 0.85);
+}
+.slide-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slide-btn {
+  flex: none;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+.slide-btn:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0) 51%, rgba(255, 255, 255, 0.12));
+}
+
+/* Feed Headlines: deep blue glass, the orange feed icon in the corner. */
+.headlines {
+  padding: 8px 10px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.04) 28px, rgba(255, 255, 255, 0) 29px),
+    linear-gradient(180deg, rgba(30, 58, 96, 0.94), rgba(10, 22, 40, 0.96));
+  box-shadow:
+    0 0 0 1px rgba(0, 10, 25, 0.6),
+    0 8px 22px rgba(0, 10, 25, 0.4);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+.hl-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: var(--fs-s);
+  font-weight: 600;
+}
+.hl-head span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hl-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hl-item {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  width: 100%;
+  margin: 0 0 2px;
+  padding: 4px 5px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: #fff;
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+  text-align: left;
+  animation: slide-in 400ms ease-out both;
+}
+.hl-item:hover:not(:disabled) {
+  border-color: rgba(140, 200, 255, 0.55);
+  background: linear-gradient(180deg, rgba(120, 190, 255, 0.35), rgba(60, 130, 210, 0.25));
+}
+
+/* Currency: green-blue glass, like Vista's currency gadget. */
+.currency {
+  padding: 9px 10px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0.08) 45%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, rgba(36, 160, 140, 0.9), rgba(10, 92, 90, 0.94));
+  box-shadow:
+    0 0 0 1px rgba(0, 30, 30, 0.5),
+    0 8px 22px rgba(0, 20, 45, 0.35);
+  text-shadow: 0 1px 2px rgba(0, 30, 30, 0.6);
+}
+.cur-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 28px;
+}
+.cur-base {
+  padding-bottom: 5px;
+  margin-bottom: 3px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+.cur-amount {
+  width: 0;
+  flex: 1;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid rgba(0, 40, 40, 0.5);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #e9f3f2, #fff 40%);
+  color: var(--ink);
+  font-size: var(--fs-s);
+  outline: none;
+}
+.cur-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.cur-code {
+  flex: none;
+  height: 22px;
+  padding: 0 2px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 11px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.02) 51%, rgba(255, 255, 255, 0.18));
+  color: #fff;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.cur-code option {
+  color: var(--ink);
+}
+.cur-note {
+  margin-top: 4px;
+  font-size: 10px;
+  opacity: 0.8;
+  text-align: right;
+}
+
+/* Web 2.0's glossy "New" pill. */
+.new-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px 2px;
+  border: 1px solid #b8360c;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffb08a 0%, #ff6a2e 48%, #e9470f 52%, #ff7a3d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 1px 2px rgba(120, 30, 0, 0.35);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  text-shadow: 0 1px 1px rgba(120, 30, 0, 0.6);
+  vertical-align: 1px;
+}

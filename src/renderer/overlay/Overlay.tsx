@@ -70,8 +70,15 @@ export function OverlayApp() {
 
   if (msg.modal) {
     return (
-      <div className="ov-modal" ref={popupRef} onMouseDown={(e) => e.target === e.currentTarget && close()}>
+      <div className={`ov-modal is-${c.kind}`} ref={popupRef} onMouseDown={(e) => e.target === e.currentTarget && close()}>
         {c.kind === 'tabflip' && <TabFlip key={msg.token} tabs={c.tabs} spaces={c.spaces} />}
+        {c.kind === 'flip3d' && <Flip3D tabs={c.tabs} />}
+        {c.kind === 'splash' && (
+          <div className="splash" aria-hidden>
+            <Orb size={104} />
+            <div className="splash-name">Auralis</div>
+          </div>
+        )}
         {c.kind === 'palette' && <Palette key={msg.token} initial={c.query} />}
         {c.kind === 'screens' && <ScreenPicker key={msg.token} origin={c.origin} audio={c.audio} sources={c.sources} />}
       </div>
@@ -791,6 +798,9 @@ function TabFlip({ tabs, spaces }: { tabs: TabThumb[]; spaces: Space[] }) {
           <Icon name="search" />
           <input ref={ref} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search open tabs" aria-label="Search open tabs" />
         </div>
+        <button className="flip-mode" title="Flip 3D (Ctrl+Shift+F)" onClick={() => act('flip3d')}>
+          <Icon name="flip" size={16} /> Flip 3D
+        </button>
         {spaces.length > 1 && (
           <div className="flip-spaces" role="tablist">
             <button className={space === 'all' ? 'is-on' : ''} onClick={() => setSpace('all')}>
@@ -836,6 +846,71 @@ function TabFlip({ tabs, spaces }: { tabs: TabThumb[]; spaces: Space[] }) {
         {filtered.length === 0 && <div className="flip-none">No open tabs match “{q}”.</div>}
       </div>
       <div className="flip-hint">Press Enter to switch, Delete to close a tab, or Esc to go back.</div>
+    </div>
+  )
+}
+
+// ---- Flip 3D ------------------------------------------------------------------------------------------------
+
+/** Vista's Flip 3D: tabs as a tilted stack. Scroll or use the arrow keys to
+ *  bring the next one forward; only the nearest few are drawn. */
+function Flip3D({ tabs }: { tabs: TabThumb[] }) {
+  const n = tabs.length
+  const [front, setFront] = useState(() => Math.max(0, tabs.findIndex((t) => t.active)))
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => ref.current?.focus(), [])
+  useEffect(() => setFront((f) => Math.min(f, Math.max(0, n - 1))), [n])
+  const step = (d: number) => n && setFront((f) => (f + d + n) % n)
+  const wheel = useRef(0)
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || (e.key === 'Tab' && !e.shiftKey)) step(1)
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || (e.key === 'Tab' && e.shiftKey)) step(-1)
+    else if (e.key === 'Enter' && tabs[front]) act('activate', tabs[front].id)
+    else if (e.key === 'Delete' && tabs[front]) act('close', tabs[front].id)
+    else return
+    e.preventDefault()
+  }
+  return (
+    <div
+      className="flip3d"
+      ref={ref}
+      tabIndex={-1}
+      onKeyDown={onKey}
+      onWheel={(e) => {
+        // One flip per notch, however eager the wheel.
+        const now = Date.now()
+        if (now - wheel.current < 120) return
+        wheel.current = now
+        step(e.deltaY > 0 ? 1 : -1)
+      }}
+      onMouseDown={(e) => e.target === e.currentTarget && close()}
+    >
+      <div className="f3-stage" onMouseDown={(e) => e.target === e.currentTarget && close()}>
+        {tabs.map((t, i) => {
+          const d = (i - front + n) % n
+          if (d > 6) return null
+          return (
+            <div
+              key={t.id}
+              className={`f3-card${d === 0 ? ' is-front' : ''}`}
+              style={{ '--d': d, zIndex: 20 - d } as React.CSSProperties}
+              onClick={() => act('activate', t.id)}
+            >
+              <div className="f3-title">
+                <Favicon src={t.favicon} />
+                <span>{t.title}</span>
+              </div>
+              <div className="f3-shot">{t.thumbnail ? <img src={t.thumbnail} alt="" /> : <Favicon src={t.favicon} size={48} />}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div className="f3-hint">
+        <span>Scroll or press the arrow keys to flip through your tabs. Enter switches, Delete closes, Esc goes back.</span>
+        <button className="flip-mode" onClick={() => act('grid')}>
+          <Icon name="layers" size={16} /> Tab Flip
+        </button>
+      </div>
     </div>
   )
 }

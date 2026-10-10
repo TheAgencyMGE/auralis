@@ -55,7 +55,16 @@ const CHROME = [
   'space.switch',
   'tool.run',
   'settings.get',
-  'status.dismiss'
+  'settings.set',
+  'status.dismiss',
+  'media.control',
+  'infobar.action',
+  'feed.open',
+  'weather.get',
+  'geo.search',
+  'meter.get',
+  'feed.get',
+  'currency.get'
 ] as const
 
 const OVERLAY = [
@@ -103,7 +112,9 @@ const PAGE = [
   'app.info',
   'app.licenses',
   'app.relaunch',
-  'app.defaultBrowser'
+  'app.defaultBrowser',
+  'feed.get',
+  'currency.get'
 ] as const
 
 export type ChromeMethod = (typeof CHROME)[number]
@@ -120,7 +131,9 @@ export const ROLE_METHODS: Record<Role, readonly string[]> = {
 /** Which internal page may call which page methods. Least privilege: the new
  *  tab page cannot clear history, the history page cannot change settings. */
 export const PAGE_METHODS: Record<InternalPage, readonly PageMethod[]> = {
-  newtab: ['settings.get', 'settings.set', 'nav.go', 'ntp.info', 'ntp.topSites', 'ntp.removeTopSite', 'weather.get', 'geo.search', 'meter.get'],
+  newtab: ['settings.get', 'settings.set', 'nav.go', 'ntp.info', 'ntp.topSites', 'ntp.removeTopSite', 'weather.get', 'geo.search', 'meter.get', 'feed.get', 'currency.get'],
+  welcome: ['settings.get', 'settings.set', 'nav.go', 'bookmarks.import', 'app.defaultBrowser'],
+  feed: ['settings.get', 'settings.set', 'nav.go', 'feed.get'],
   settings: [
     'settings.get', 'settings.set', 'nav.go', 'data.clear', 'permissions.list', 'permissions.remove', 'shield.stats',
     'dialog.chooseFolder', 'bookmarks.import', 'bookmarks.export', 'app.info', 'geo.search', 'app.relaunch', 'app.defaultBrowser'
@@ -150,7 +163,8 @@ export const EVENTS = [
   'tasks',
   'flip.results',
   'palette.results',
-  'sound'
+  'sound',
+  'page.focus'
 ] as const
 export type EventName = (typeof EVENTS)[number]
 

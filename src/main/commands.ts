@@ -73,6 +73,7 @@ export const COMMANDS: Command[] = [
   { id: 'mute-tab', label: 'Mute or unmute tab', section: 'Tabs', shortcut: 'Ctrl+M', run: (_w, t) => t?.setMuted(!t.muted) },
   { id: 'sleep-tab', label: 'Put other tabs to sleep', section: 'Tabs', keywords: 'memory discard suspend', run: (w, t) => w.visibleTabs().forEach((x) => x !== t && !x.audible && x.sleep()) },
   { id: 'tab-flip', label: 'Tab Flip', section: 'Tabs', shortcut: 'Ctrl+Shift+A', keywords: 'overview search tabs expose', run: (w) => void import('./menus').then((m) => m.showTabFlip(w)) },
+  { id: 'flip-3d', label: 'Flip 3D', section: 'Tabs', shortcut: 'Ctrl+Shift+F', keywords: 'stack switcher aero tabs 3d', run: (w) => void import('./menus').then((m) => m.showFlip3D(w)) },
   { id: 'split-view', label: 'Split view', section: 'Tabs', shortcut: 'Ctrl+Shift+E', keywords: 'side by side tile', run: (w) => w.toggleSplit() },
   // spaces
   { id: 'new-space', label: 'New space', section: 'Spaces', keywords: 'workspace', run: (w) => void w.createSpace() },
@@ -114,6 +115,8 @@ export const COMMANDS: Command[] = [
   { id: 'downloads', label: 'Downloads', section: 'Browser', shortcut: 'Ctrl+J', run: (w) => openInternal(w, 'downloads') },
   { id: 'favorites', label: 'Favorites', section: 'Browser', shortcut: 'Ctrl+Shift+O', keywords: 'bookmarks manager', run: (w) => openInternal(w, 'bookmarks') },
   { id: 'toggle-bar', label: 'Show or hide Favorites bar', section: 'Browser', shortcut: 'Ctrl+Shift+B', run: () => settings.set({ showBookmarksBar: !settings.get().showBookmarksBar }) },
+  { id: 'toggle-sidebar', label: 'Show or hide the Sidebar', section: 'Browser', keywords: 'gadgets panel widgets', run: () => settings.set({ sidebar: !settings.get().sidebar }) },
+  { id: 'welcome', label: 'Welcome Center', section: 'Browser', keywords: 'getting started first run tour', run: (w) => openInternal(w, 'welcome') },
   { id: 'toggle-status', label: 'Show or hide status bar', section: 'Browser', shortcut: 'Ctrl+/', run: () => settings.set({ showStatusBar: !settings.get().showStatusBar }) },
   { id: 'settings', label: 'Settings', section: 'Browser', shortcut: 'Ctrl+,', keywords: 'options preferences', run: (w) => openInternal(w, 'settings') },
   { id: 'clear-data', label: 'Clear browsing data…', section: 'Browser', shortcut: 'Ctrl+Shift+Del', keywords: 'privacy cookies cache', run: (w) => openInternal(w, 'settings', '#clear') },

@@ -30,7 +30,7 @@ export function resolveShortcut(input: Pick<Electron.Input, 'key' | 'control' | 
       case 'k': return 'palette'
       case 'r': return shift ? 'hard-reload' : 'reload'
       case 'F5': return 'hard-reload'
-      case 'f': return 'find'
+      case 'f': return shift ? 'flip-3d' : 'find'
       case 'g': return shift ? 'find-prev' : 'find-next'
       case '=': case '+': return 'zoom-in'
       case '-': case '_': return 'zoom-out'

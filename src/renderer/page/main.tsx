@@ -13,7 +13,9 @@ const pages = {
   taskmanager: lazy(() => import('./pages/TaskManager')),
   reader: lazy(() => import('./pages/Reader')),
   error: lazy(() => import('./pages/ErrorPage')),
-  about: lazy(() => import('./pages/About'))
+  about: lazy(() => import('./pages/About')),
+  welcome: lazy(() => import('./pages/Welcome')),
+  feed: lazy(() => import('./pages/FeedView'))
 } as const
 
 const host = location.hostname as keyof typeof pages

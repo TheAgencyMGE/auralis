@@ -388,3 +388,114 @@ test('app menu, spaces and Tab Flip open in the overlay', async () => {
   await until(h.state, (s) => s.overlay === 'tabflip')
   await expect(h.overlay.locator('.flip-card')).not.toHaveCount(0)
 })
+
+// ---- 2000s features -----------------------------------------------------------------------
+
+const settingsSet = (h: Harness, patch: object) => h.app.evaluate((_e, p) => (globalThis as any).__auralis.settings.set(p), patch)
+
+test('blocks pop-ups nobody clicked for, and the Information Bar lets one through', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/autopop'))
+  await expect(h.chrome.locator('.infobar')).toContainText('Pop-up blocked')
+  expect((await h.state()).tabs).toHaveLength(1)
+  await h.chrome.locator('.infobar-btn', { hasText: 'Show pop-up' }).click()
+  await until(h.state, (s) => s.tabs.length === 2 && s.tabs.some((t) => t.url.endsWith('/child')))
+  await expect(h.chrome.locator('.infobar')).toHaveCount(0)
+})
+
+test('a finished download announces itself in the Information Bar', async () => {
+  h = await launch()
+  const dir = fs.mkdtempSync(path.join(h.profile, 'dl-'))
+  await settingsSet(h, { downloadDir: dir })
+  await omniboxGo(h, server.url('/download'))
+  await expect(h.chrome.locator('.infobar.is-download')).toContainText('auralis-test.bin')
+  await h.chrome.locator('.infobar-x').click()
+  await expect(h.chrome.locator('.infobar')).toHaveCount(0)
+})
+
+test('finds a page’s feed and reads it as text only', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/feedpage'))
+  await h.chrome.locator('.feed-btn').click()
+  const feed = await h.page('auralis://feed')
+  await expect(feed.locator('.fv-item')).toHaveCount(3)
+  await expect(feed.locator('.fv-item').first()).toContainText('bold text')
+  // Markup in the feed is text: no elements, no script.
+  expect(await feed.evaluate(() => [document.querySelectorAll('.fv-item b').length, (window as any).pwned ?? 0])).toEqual([0, 0])
+  // A javascript: link is not a link.
+  await expect(feed.locator('.fv-item', { hasText: 'Second' }).locator('a')).toHaveCount(0)
+  await feed.locator('.fv-about .btn').click()
+  await until(() => h.app.evaluate(() => (globalThis as any).__auralis.settings.get()), (s: any) => s.widgets.news && s.newsFeed.endsWith('/rss'))
+})
+
+test('the Sidebar docks beside the page and the page makes room', async () => {
+  h = await launch()
+  const width = () => h.app.evaluate(() => [...(globalThis as any).__auralis.BrowserWin.all.values()][0].activeTab.view.getBounds().width as number)
+  const before = await width()
+  await settingsSet(h, { sidebar: true, widgets: { analogClock: true } })
+  await expect(h.chrome.locator('.side-panel .analog svg')).toHaveCount(1)
+  await until(width, (w) => w < before - 200)
+  // The new tab page hides its own gadget column while the Sidebar is open.
+  const ntp = await h.page('auralis://newtab')
+  await expect(ntp.locator('aside.sidebar')).toHaveCount(0)
+  await h.chrome.locator('.side-head [aria-label="Close the Sidebar"]').click()
+  await until(width, (w) => w === before)
+})
+
+test('the mini player shows what a page is playing and pauses it', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/media'))
+  await expect(h.chrome.locator('.mini-player')).toContainText('Test Tone — Auralis')
+  await h.chrome.locator('.mp-play').click()
+  const page = await h.page(server.url('/media'))
+  await until(() => page.evaluate(() => (document.getElementById('a') as HTMLAudioElement).paused), (p) => p === true)
+  await expect(h.chrome.locator('.mp-play')).toHaveAttribute('aria-label', 'Play')
+})
+
+test('Flip 3D stacks the tabs and switches to one', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/a'))
+  await h.app.evaluate((_e, u) => [...(globalThis as any).__auralis.BrowserWin.all.values()][0].createTab({ url: u }), server.url('/b'))
+  await until(h.state, (s) => s.tabs.length === 2 && s.tabs[1].title === 'Page B')
+  await h.app.evaluate(() => {
+    const a = (globalThis as any).__auralis
+    a.runCommand([...a.BrowserWin.all.values()][0], 'flip-3d')
+  })
+  await until(h.state, (s) => s.overlay === 'flip3d')
+  await expect(h.overlay.locator('.f3-card')).toHaveCount(2)
+  // The active tab is in front; flip once to bring the other forward, then switch.
+  await expect(h.overlay.locator('.f3-card.is-front')).toContainText('Page B')
+  await h.overlay.keyboard.press('ArrowDown')
+  await expect(h.overlay.locator('.f3-card.is-front')).toContainText('Page A')
+  await h.overlay.keyboard.press('Enter')
+  await until(h.state, (s) => s.overlay === null && s.tabs.find((t) => t.id === s.active)?.title === 'Page A')
+})
+
+test('first run shows the splash and the Welcome Center once', async () => {
+  const profile = tempProfile()
+  h = await launch(profile, { AURALIS_FIRST_RUN: '1' })
+  await until(h.state, (s) => s.tabs.some((t) => t.url.startsWith('auralis://welcome')))
+  const welcome = await h.page('auralis://welcome')
+  await expect(welcome.locator('.wc-tile')).toHaveCount(6)
+  await until(() => h.app.evaluate(() => (globalThis as any).__auralis.settings.get().welcomed), (v) => v === true)
+  // Close it, so the next start can't simply restore it with the session.
+  await h.app.evaluate(() => {
+    const w = [...(globalThis as any).__auralis.BrowserWin.all.values()][0]
+    w.closeTab(w.tabs.find((t: any) => t.displayUrl().startsWith('auralis://welcome')))
+  })
+  await until(h.state, (s) => !s.tabs.some((t) => t.url.startsWith('auralis://welcome')))
+  await h.close()
+  h = await launch(profile, { AURALIS_FIRST_RUN: '1' })
+  await wait(1500)
+  expect((await h.state()).tabs.some((t) => t.url.startsWith('auralis://welcome'))).toBe(false)
+})
+
+test('the busy pointer shows while a page loads, then goes away', async () => {
+  h = await launch()
+  await omniboxGo(h, server.url('/slow'))
+  await expect(h.chrome.locator('.frame.is-busy')).toHaveCount(1)
+  const page = await h.page(server.url('/slow'))
+  await until(() => page.evaluate(() => getComputedStyle(document.body).cursor), (c) => c === 'progress')
+  await expect(h.chrome.locator('.frame.is-busy')).toHaveCount(0, { timeout: 8000 })
+  await until(() => page.evaluate(() => getComputedStyle(document.body).cursor), (c) => c === 'auto')
+})

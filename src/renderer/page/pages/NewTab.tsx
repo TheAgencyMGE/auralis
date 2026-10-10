@@ -1,10 +1,10 @@
 // The new tab page: real photography, a search field, frequent sites, and
 // a Sidebar of gadgets on the right — Vista's desktop, as a start page.
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { ALL_WALLPAPER_IDS, SEARCH_ENGINES, wallpaperInfo, type WallpaperId, type Settings } from '@shared/settings'
+import { useEffect, useMemo, useState } from 'react'
+import { ALL_WALLPAPER_IDS, NEW_GADGETS, NEW_WALLPAPERS, SEARCH_ENGINES, isFeedUrl, wallpaperInfo, type WallpaperId, type Settings } from '@shared/settings'
 import { call, useSettings } from '@ui/api'
 import { Favicon, Icon } from '@ui/icons'
-import { weatherInfo } from '../weather'
+import { GADGETS, Gadgets, LiveVideo, NewBadge, hasSidebarGadgets } from '@ui/gadgets'
 
 interface Site {
   url: string
@@ -53,7 +53,8 @@ function NormalTab() {
   const [picker, setPicker] = useState(false)
   const [customize, setCustomize] = useState(false)
   const wp = wallpaperInfo(s.wallpaper)
-  const hasGadgets = s.widgets.weather || s.widgets.notes || s.widgets.meter || s.widgets.aquarium
+  // With the window's own Sidebar open, the page's gadget column steps aside.
+  const hasGadgets = !s.sidebar && hasSidebarGadgets(s.widgets)
 
   useEffect(() => {
     document.title = 'New Tab'
@@ -90,14 +91,7 @@ function NormalTab() {
 
       {hasGadgets && (
       <aside className="sidebar" aria-label="Gadgets">
-        {s.widgets.weather && <WeatherGadget settings={s} />}
-        {s.widgets.aquarium && (
-          <section className="gadget aquarium" aria-label="Aquarium">
-            <LiveVideo src="/live/tank.mp4" poster="/live/tank.webp" className="tank" />
-          </section>
-        )}
-        {s.widgets.notes && <NotesGadget initial={s.notes} />}
-        {s.widgets.meter && <MeterGadget />}
+        <Gadgets s={s} />
       </aside>
       )}
 
@@ -184,209 +178,7 @@ function TopSites({ sites, onRemove }: { sites: Site[]; onRemove: (host: string)
   )
 }
 
-// ---- gadgets --------------------------------------------------------------------------
-
-interface WeatherData {
-  needsLocation?: boolean
-  error?: string
-  location?: string
-  unit?: 'c' | 'f'
-  current?: { temperature_2m: number; apparent_temperature: number; weather_code: number; is_day: number; wind_speed_10m: number; relative_humidity_2m: number }
-  daily?: { time: string[]; temperature_2m_max: number[]; temperature_2m_min: number[]; weather_code: number[] }
-}
-
-function WeatherGadget({ settings }: { settings: Settings }) {
-  const [data, setData] = useState<WeatherData | null>(null)
-  const [editing, setEditing] = useState(false)
-  useEffect(() => {
-    let live = true
-    const load = () => void call<WeatherData>('weather.get').then((d) => live && setData(d))
-    load()
-    const t = window.setInterval(load, 15 * 60_000)
-    return () => {
-      live = false
-      window.clearInterval(t)
-    }
-  }, [settings.weatherLocation?.lat, settings.weatherLocation?.lon, settings.temperatureUnit])
-
-  if (!data || editing || data.needsLocation) {
-    return (
-      <section className="gadget weather is-setup">
-        <LocationSearch
-          prompt={data?.needsLocation ? 'Show the weather for' : 'Change location'}
-          onDone={() => setEditing(false)}
-          canCancel={!data?.needsLocation && !!data}
-        />
-      </section>
-    )
-  }
-  if (data.error || !data.current) {
-    return (
-      <section className="gadget weather">
-        <p className="gadget-msg">Weather is unavailable offline. It will refresh when you’re connected.</p>
-      </section>
-    )
-  }
-  const c = data.current
-  const info = weatherInfo(c.weather_code, !!c.is_day)
-  const unit = data.unit === 'f' ? '°F' : '°C'
-  return (
-    <section className="gadget weather" aria-label={`Weather in ${data.location}`}>
-      <div className="w-now">
-        <img className="weather-art" src={info.art} width={74} height={74} alt="" />
-        <div className="w-temp">
-          {Math.round(c.temperature_2m)}
-          <span>°</span>
-        </div>
-      </div>
-      <div className="w-cond">{info.label}</div>
-      <button className="w-place" onClick={() => setEditing(true)} title="Change location">
-        {data.location?.split(',')[0]}
-      </button>
-      <div className="w-meta">
-        Feels like {Math.round(c.apparent_temperature)}
-        {unit}, humidity {Math.round(c.relative_humidity_2m)}%
-      </div>
-      {data.daily && (
-        <div className="w-days">
-          {data.daily.time.slice(1, 5).map((d, i) => (
-            <div key={d} className="w-day">
-              <span>{new Date(d + 'T12:00').toLocaleDateString([], { weekday: 'short' })}</span>
-              <img className="weather-art" src={weatherInfo(data.daily!.weather_code[i + 1]).art} width={26} height={26} alt="" />
-              <span className="w-hi">{Math.round(data.daily!.temperature_2m_max[i + 1])}°</span>
-              <span className="w-lo">{Math.round(data.daily!.temperature_2m_min[i + 1])}°</span>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="w-credit">Weather data by Open-Meteo</div>
-    </section>
-  )
-}
-
-function LocationSearch({ prompt, onDone, canCancel }: { prompt: string; onDone: () => void; canCancel: boolean }) {
-  const [q, setQ] = useState('')
-  const [results, setResults] = useState<{ name: string; lat: number; lon: number }[]>([])
-  const timer = useRef<number | null>(null)
-  useEffect(() => {
-    if (timer.current) window.clearTimeout(timer.current)
-    if (q.trim().length < 2) return setResults([])
-    timer.current = window.setTimeout(() => void call<typeof results>('geo.search', q).then(setResults), 250)
-  }, [q])
-  return (
-    <div className="loc">
-      <label className="gadget-msg" htmlFor="loc-q">
-        {prompt}
-      </label>
-      <input id="loc-q" className="field" value={q} autoFocus={canCancel} onChange={(e) => setQ(e.target.value)} placeholder="City name" />
-      <div className="loc-results">
-        {results.map((r) => (
-          <button
-            key={`${r.lat},${r.lon}`}
-            className="loc-row"
-            onClick={() => {
-              void call('settings.set', { weatherLocation: r })
-              onDone()
-            }}
-          >
-            {r.name}
-          </button>
-        ))}
-      </div>
-      {canCancel && (
-        <button className="loc-cancel" onClick={onDone}>
-          Cancel
-        </button>
-      )}
-    </div>
-  )
-}
-
-function NotesGadget({ initial }: { initial: string }) {
-  const [text, setText] = useState(initial)
-  const timer = useRef<number | null>(null)
-  const dirty = useRef(false)
-  useEffect(() => {
-    if (!dirty.current) setText(initial)
-  }, [initial])
-  const save = (v: string) => {
-    dirty.current = true
-    setText(v)
-    if (timer.current) window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => {
-      void call('settings.set', { notes: v })
-      dirty.current = false
-    }, 500)
-  }
-  return (
-    <section className="gadget notes">
-      <textarea value={text} onChange={(e) => save(e.target.value)} placeholder="Jot something down…" aria-label="Notes" spellCheck />
-    </section>
-  )
-}
-
-function MeterGadget() {
-  const [m, setM] = useState<{ memoryMB: number; cpu: number; tabs: number; sleeping: number; blocked: number } | null>(null)
-  useEffect(() => {
-    let live = true
-    const load = () => !document.hidden && void call<typeof m>('meter.get').then((v) => live && setM(v))
-    load()
-    const t = window.setInterval(load, 2000)
-    return () => {
-      live = false
-      window.clearInterval(t)
-    }
-  }, [])
-  const cpu = Math.min(100, m?.cpu ?? 0)
-  const memPct = Math.min(100, ((m?.memoryMB ?? 0) / 4096) * 100)
-  return (
-    <section className="gadget meter" aria-label="Browser meter">
-      <Bar label="CPU" value={cpu} text={`${Math.round(cpu)}%`} />
-      <Bar label="Memory" value={memPct} text={m ? (m.memoryMB >= 1024 ? `${(m.memoryMB / 1024).toFixed(1)} GB` : `${m.memoryMB} MB`) : '–'} />
-      <div className="meter-facts">
-        <span>{m?.tabs ?? 0} tabs</span>
-        <span>{m?.sleeping ?? 0} asleep</span>
-        <span>{m?.blocked ?? 0} blocked</span>
-      </div>
-    </section>
-  )
-}
-
-/** A labelled Vista progress bar. */
-function Bar({ label, value, text }: { label: string; value: number; text: string }) {
-  return (
-    <div className="meter-row">
-      <span className="meter-label">{label}</span>
-      <span className="meter-bar">
-        <span style={{ width: `${Math.max(2, Math.min(100, value))}%` }} />
-      </span>
-      <span className="meter-value">{text}</span>
-    </div>
-  )
-}
-
 // ---- customisation -----------------------------------------------------------------------
-
-/**
- * A muted, looping video that only plays while the page is visible and the
- * user hasn't asked for reduced motion; otherwise its poster stands still.
- */
-function LiveVideo({ src, poster, className }: { src: string; poster: string; className: string }) {
-  const ref = useRef<HTMLVideoElement>(null)
-  useEffect(() => {
-    const v = ref.current
-    if (!v) return
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const sync = () => {
-      if (document.hidden || still) v.pause()
-      else void v.play().catch(() => {})
-    }
-    sync()
-    document.addEventListener('visibilitychange', sync)
-    return () => document.removeEventListener('visibilitychange', sync)
-  }, [src])
-  return <video ref={ref} className={className} src={src} poster={poster} muted loop playsInline preload="auto" aria-hidden />
-}
 
 function WallpaperPicker({ current, onClose }: { current: WallpaperId; onClose: () => void }) {
   const live = ALL_WALLPAPER_IDS.filter((id) => id.startsWith('live:'))
@@ -396,7 +188,10 @@ function WallpaperPicker({ current, onClose }: { current: WallpaperId; onClose: 
     return (
       <button key={id} className={`wp-thumb${id === current ? ' is-on' : ''}`} onClick={() => void call('settings.set', { wallpaper: id })} aria-pressed={id === current}>
         <img src={w.thumb} alt="" />
-        <span>{w.name}</span>
+        <span>
+          {w.name}
+          {NEW_WALLPAPERS.includes(id) && <NewBadge />}
+        </span>
       </button>
     )
   }
@@ -417,14 +212,8 @@ function WallpaperPicker({ current, onClose }: { current: WallpaperId; onClose: 
 }
 
 function GadgetPicker({ s, onClose }: { s: Settings; onClose: () => void }) {
-  const items: { key: keyof Settings['widgets']; label: string }[] = [
-    { key: 'clock', label: 'Clock and greeting' },
-    { key: 'topSites', label: 'Frequently visited sites' },
-    { key: 'weather', label: 'Weather' },
-    { key: 'notes', label: 'Notes' },
-    { key: 'aquarium', label: 'Aquarium' },
-    { key: 'meter', label: 'Browser meter' }
-  ]
+  const [feed, setFeed] = useState(s.newsFeed)
+  useEffect(() => setFeed(s.newsFeed), [s.newsFeed])
   return (
     <div className="ntp-panel gadget-panel" role="dialog" aria-label="Gadgets">
       <div className="ntp-panel-head">
@@ -433,12 +222,27 @@ function GadgetPicker({ s, onClose }: { s: Settings; onClose: () => void }) {
           <Icon name="close" size={10} />
         </button>
       </div>
-      {items.map((it) => (
+      {GADGETS.map((it) => (
         <label key={it.key} className="gp-row">
-          <span>{it.label}</span>
+          <span>
+            {it.label}
+            {NEW_GADGETS.includes(it.key) && <NewBadge />}
+          </span>
           <input type="checkbox" className="toggle" checked={s.widgets[it.key]} onChange={(e) => void call('settings.set', { widgets: { [it.key]: e.target.checked } })} />
         </label>
       ))}
+      {s.widgets.news && (
+        <label className="gp-row">
+          <span>Headlines feed</span>
+          <input
+            className={`field gp-feed${isFeedUrl(feed) ? '' : ' is-invalid'}`}
+            value={feed}
+            aria-label="Feed address for Feed Headlines"
+            onChange={(e) => setFeed(e.target.value)}
+            onBlur={() => isFeedUrl(feed) && feed !== s.newsFeed && void call('settings.set', { newsFeed: feed })}
+          />
+        </label>
+      )}
       <label className="gp-row">
         <span>Aero sounds</span>
         <input type="checkbox" className="toggle" checked={s.aeroSounds} onChange={(e) => void call('settings.set', { aeroSounds: e.target.checked })} />

@@ -84,11 +84,18 @@ const MAP = {
   swap: 'arrow_swap',
   sun: 'weather_sunny',
   menu: 'navigation',
-  image: 'image'
+  image: 'image',
+  feed: 'rss',
+  sidebar: 'panel_right',
+  rewind: 'rewind',
+  'fast-forward': 'fast_forward',
+  flip: 'stack',
+  popup: 'window_header_horizontal',
+  'arrow-up': 'arrow_up'
 }
 
 // Folder names are Title Case, with a few acronyms in capitals.
-const ACRONYMS = { qr: 'QR' }
+const ACRONYMS = { qr: 'QR', rss: 'RSS' }
 const title = (snake) => snake.split('_').map((w) => ACRONYMS[w] ?? w[0].toUpperCase() + w.slice(1)).join(' ')
 
 const out = {}

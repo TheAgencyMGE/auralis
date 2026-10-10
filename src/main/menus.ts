@@ -161,8 +161,8 @@ export function showTabMenu(win: BrowserWin, tab: Tab, anchor: Rect): void {
 
 // ---- app menu (the Auralis orb) ---------------------------------------------------------
 
-const APP_LEFT = ['new-tab', 'new-window', 'new-private', '-', 'find', 'print', 'save-page', 'screenshot', 'reader', 'split-view', 'tab-flip']
-const APP_RIGHT = ['favorites', 'history', 'downloads', 'task-manager', 'settings', 'about']
+const APP_LEFT = ['new-tab', 'new-window', 'new-private', '-', 'find', 'print', 'save-page', 'screenshot', 'reader', 'split-view', 'tab-flip', 'flip-3d', 'toggle-sidebar']
+const APP_RIGHT = ['favorites', 'history', 'downloads', 'task-manager', 'settings', 'welcome', 'about']
 
 export function showAppMenu(win: BrowserWin, anchor: Rect): void {
   const tab = win.activeTab
@@ -520,6 +520,26 @@ export async function showTabFlip(win: BrowserWin): Promise<void> {
     } else if (id === 'new') {
       win.overlay.hide()
       win.createTab({ url: NEW_TAB_URL })
+    } else if (id === 'flip3d') {
+      void showFlip3D(win)
+    }
+  })
+}
+
+/** Vista's Flip 3D: the tabs of this space as a tilted stack of windows. */
+export async function showFlip3D(win: BrowserWin): Promise<void> {
+  if (win.overlay.isOpen('flip3d')) return win.overlay.hide()
+  const thumbs = async () => (await thumbsFor(win, false)).filter((t) => t.spaceId === win.activeSpaceId)
+  win.showOverlay({ content: { kind: 'flip3d', tabs: await thumbs() }, anchor: point(0, 0), align: 'start', modal: true }, (id, payload) => {
+    const tab = typeof payload === 'number' ? win.tabById(payload) : null
+    if (id === 'activate' && tab) {
+      win.overlay.hide()
+      win.activate(tab)
+    } else if (id === 'close' && tab) {
+      win.closeTab(tab)
+      void thumbs().then((t) => (t.length ? win.overlay.update({ kind: 'flip3d', tabs: t }) : win.overlay.hide()))
+    } else if (id === 'grid') {
+      void showTabFlip(win)
     }
   })
 }

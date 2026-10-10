@@ -41,6 +41,11 @@ as stock footage.
 - Jellyfish — Chris Munnik — https://www.pexels.com/video/4805827/
 - Droplet — Pixabay — https://www.pexels.com/video/855494/
 - Northern Lights — Nico Becker — https://www.pexels.com/video/5600929/
+- Rain on Glass — Zuzanna Musial — https://www.pexels.com/video/5366344/
+- Wind Farm — Pixabay — https://www.pexels.com/video/855181/
+- City at Dusk — William Chen — https://www.pexels.com/video/14563249/
+- Rainforest Falls — Greg Benson — https://www.pexels.com/video/10761087/
+- School of Fish — Daniel Torobekov — https://www.pexels.com/video/5277924/
 - Aquarium gadget — Magda Ehlers — https://www.pexels.com/video/18900261/
 
 ## Data services
@@ -62,6 +67,19 @@ as stock footage.
   https://github.com/microsoft/fluentui-emoji
 - Sounds: Interface Sounds by Kenney (www.kenney.nl), CC0 1.0 —
   https://kenney.nl/assets/interface-sounds
+- Startup sound: "Wind chime small" by freesound_community, Pixabay Content
+  License — https://pixabay.com/sound-effects/film-special-effects-wind-chime-small-64660/ (trimmed
+  to seven seconds)
+- Clock gadget: "Swiss railway clock" by Jahoe, Wikimedia Commons, CC BY-SA 3.0 —
+  https://commons.wikimedia.org/wiki/File:Swiss_railway_clock.svg (modified:
+  ids on the hands, prefixed class names). The modified file,
+  art/clock.svg, is available under the same license.
+- Feed icon: the Mozilla Foundation's feed icon, MPL 1.1 —
+  https://commons.wikimedia.org/wiki/File:Feed-icon.svg
+- Currency rates: Frankfurter (https://frankfurter.dev), European Central Bank
+  reference rates.
+- Feed Headlines default feed: BBC News (https://www.bbc.co.uk/news), fetched at
+  runtime and shown as headlines that link to the BBC.
 - Text is set in Segoe UI, which is part of Windows and is not distributed
   with Auralis.
 

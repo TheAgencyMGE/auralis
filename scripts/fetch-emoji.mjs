@@ -34,7 +34,11 @@ const EMOJI = {
   memo: 'Memo',
   shield: 'Shield',
   warning: 'Warning',
-  detective: 'Detective'
+  detective: 'Detective',
+  palette: 'Artist palette',
+  picture: 'Framed picture',
+  magnifier: 'Magnifying glass tilted left',
+  bell: 'Bell'
 }
 
 const failed = []

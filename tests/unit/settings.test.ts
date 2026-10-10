@@ -30,4 +30,21 @@ describe('settings sanitizer', () => {
     expect(sanitizeSettings({ weatherLocation: { name: 'Oslo', lat: 59.9, lon: 10.7 } }).weatherLocation).toEqual({ name: 'Oslo', lat: 59.9, lon: 10.7 })
     expect(sanitizeSettings({ weatherLocation: { name: 'X', lat: 200, lon: 0 } }).weatherLocation).toBeNull()
   })
+  it('keeps the news feed a web URL', () => {
+    expect(sanitizeSettings({ newsFeed: 'javascript:alert(1)' }).newsFeed).toBe(DEFAULT_SETTINGS.newsFeed)
+    expect(sanitizeSettings({ newsFeed: 'file:///C:/secret.xml' }).newsFeed).toBe(DEFAULT_SETTINGS.newsFeed)
+    expect(sanitizeSettings({ newsFeed: 'https://example.com/feed.xml' }).newsFeed).toBe('https://example.com/feed.xml')
+  })
+  it('accepts only known currencies, at most four, without repeats', () => {
+    const s = sanitizeSettings({ currencyBase: 'XXX', currencyQuotes: ['EUR', 'EUR', 'BTC', 'GBP', 'JPY', 'CAD', 'AUD'] })
+    expect(s.currencyBase).toBe(DEFAULT_SETTINGS.currencyBase)
+    expect(s.currencyQuotes).toEqual(['EUR', 'GBP', 'JPY', 'CAD'])
+  })
+  it('filters the pop-up allowlist to hostnames', () => {
+    expect(sanitizeSettings({ popupAllowlist: ['example.com', 'a b', null] }).popupAllowlist).toEqual(['example.com'])
+  })
+  it('accepts the new live wallpapers and rejects unknown ones', () => {
+    expect(sanitizeSettings({ wallpaper: 'live:rain' }).wallpaper).toBe('live:rain')
+    expect(sanitizeSettings({ wallpaper: 'live:nope' }).wallpaper).toBe(DEFAULT_SETTINGS.wallpaper)
+  })
 })

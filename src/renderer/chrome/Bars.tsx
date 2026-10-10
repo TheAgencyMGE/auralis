@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import type { BookmarkNode, FindState, TabState, WindowState } from '@shared/types'
+import type { BookmarkNode, FindState, InfoBar, TabState, WindowState } from '@shared/types'
 import { call, bridge, rectOf } from '@ui/api'
 import { Favicon, Icon } from '@ui/icons'
 import { FolderGlyph } from '@ui/FolderGlyph'
@@ -172,10 +172,13 @@ export function FindBar({ find }: { find: FindState }) {
 export function StatusBar({ state, active }: { state: WindowState | null; active: TabState | null }) {
   const sleeping = state?.tabs.filter((t) => t.asleep).length ?? 0
   const status = state?.status || (active?.loading ? 'Loading…' : active?.crashed ? 'This tab stopped working' : 'Done')
+  // The tab whose media the mini player controls: this one, else one playing elsewhere.
+  const player = active?.media ? active : (state?.tabs.find((t) => t.media?.playing) ?? null)
   return (
     <footer className="statusbar glow-text">
       <span className="status-text">{status}</span>
       <span className="status-cells">
+        {player && <MiniPlayer tab={player} />}
         {state?.incognito && (
           <span className="status-cell private-cell">
             <Icon name="private" size={14} /> InPrivate
@@ -198,6 +201,67 @@ export function StatusBar({ state, active }: { state: WindowState | null; active
         )}
       </span>
     </footer>
+  )
+}
+
+/** Windows Media Player's mini mode, docked in the status bar. */
+function MiniPlayer({ tab }: { tab: TabState }) {
+  const m = tab.media!
+  const label = [m.title || tab.title, m.artist].filter(Boolean).join(' — ')
+  const control = (action: 'toggle' | 'back' | 'forward') => void call('media.control', tab.id, action)
+  return (
+    <span className="mini-player" role="group" aria-label={`Media: ${label}`}>
+      <button className="mp-btn" title="Back 10 seconds" aria-label="Back 10 seconds" onClick={() => control('back')}>
+        <Icon name="rewind" size={11} />
+      </button>
+      <button className="mp-play" title={m.playing ? 'Pause' : 'Play'} aria-label={m.playing ? 'Pause' : 'Play'} onClick={() => control('toggle')}>
+        <Icon name={m.playing ? 'pause' : 'play'} size={11} />
+      </button>
+      <button className="mp-btn" title="Forward 10 seconds" aria-label="Forward 10 seconds" onClick={() => control('forward')}>
+        <Icon name="fast-forward" size={11} />
+      </button>
+      <button className="mp-title" title={`${label}
+Show this tab`} onClick={() => void call('tab.activate', tab.id)}>
+        {label}
+      </button>
+      <button className="mp-btn" title={tab.muted ? 'Unmute' : 'Mute'} aria-label={tab.muted ? 'Unmute' : 'Mute'} aria-pressed={tab.muted} onClick={() => void call('tab.toggleMute', tab.id)}>
+        <Icon name={tab.muted ? 'mute' : 'volume'} size={12} />
+      </button>
+    </span>
+  )
+}
+
+// ---- Information Bar (IE7's yellow strip under the toolbar) -------------------------------------
+
+export function InfoBarRow({ bar }: { bar: InfoBar }) {
+  const act = (action: string) => void call('infobar.action', bar.id, action)
+  return (
+    <div className={`infobar is-${bar.kind}`} role="alert">
+      <Icon name={bar.kind === 'popup' ? 'popup' : 'download'} size={15} className="infobar-icon" />
+      <span className="infobar-text">{bar.message}</span>
+      {bar.kind === 'popup' ? (
+        <>
+          <button className="infobar-btn" onClick={() => act('once')}>
+            Show pop-up
+          </button>
+          <button className="infobar-btn" onClick={() => act('always')}>
+            Always allow pop-ups from this site
+          </button>
+        </>
+      ) : (
+        <>
+          <button className="infobar-btn" onClick={() => act('open')}>
+            Open
+          </button>
+          <button className="infobar-btn" onClick={() => act('show')}>
+            Open folder
+          </button>
+        </>
+      )}
+      <button className="infobar-x" title="Close the Information Bar" aria-label="Close the Information Bar" onClick={() => act('dismiss')}>
+        <Icon name="close" size={10} />
+      </button>
+    </div>
   )
 }
 

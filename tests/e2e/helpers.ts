@@ -25,10 +25,10 @@ export interface Harness {
   close: () => Promise<void>
 }
 
-export async function launch(profile = tempProfile()): Promise<Harness> {
+export async function launch(profile = tempProfile(), env: Record<string, string> = {}): Promise<Harness> {
   const app = await electron.launch({
     args: ['.'],
-    env: { ...process.env, AURALIS_E2E: '1', AURALIS_USER_DATA: profile }
+    env: { ...process.env, AURALIS_E2E: '1', AURALIS_USER_DATA: profile, ...env }
   })
   const page = async (prefix: string): Promise<Page> => {
     for (let i = 0; i < 100; i++) {
@@ -99,6 +99,45 @@ const routes: Record<string, (req: http.IncomingMessage, res: http.ServerRespons
     html(r, 'Opener', `<button id="open" onclick="window.w = window.open('/child', 'pop', 'width=400,height=300')">open</button>
       <script>window.addEventListener('message', (e) => { document.title = 'got ' + e.data })</script>`),
   '/child': (_q, r) => html(r, 'Child', `<script>window.opener && window.opener.postMessage('hello', '*')</script>`),
+  '/slow': (_q, r) => {
+    // The document arrives at once; an image keeps the page loading for a while.
+    r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    r.end('<!doctype html><title>Slow</title><img src="/slow.png">')
+  },
+  '/slow.png': (_q, r) => void setTimeout(() => (r.writeHead(404), r.end()), 2500),
+  '/autopop': (_q, r) => html(r, 'Auto pop', `<script>setTimeout(() => window.open('/child', 'ad', 'width=300,height=200'), 200)</script>`),
+  '/feedpage': (_q, r) => {
+    r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    r.end(`<!doctype html><html><head><title>Has a feed</title><link rel="alternate" type="application/rss+xml" title="Test feed" href="/rss"></head><body>news</body></html>`)
+  },
+  '/rss': (_q, r) => {
+    r.writeHead(200, { 'Content-Type': 'application/rss+xml' })
+    r.end(`<?xml version="1.0"?><rss version="2.0"><channel><title>Test feed</title><link>http://example.com/</link><description>Items</description>
+      <item><title>First &amp; foremost</title><link>http://example.com/1</link><pubDate>Tue, 30 Jan 2007 12:00:00 GMT</pubDate><description>&lt;b&gt;bold&lt;/b&gt; text&lt;script&gt;window.pwned=1&lt;/script&gt;</description></item>
+      <item><title>Second</title><link>javascript:alert(1)</link></item>
+      <item><title>Third</title><link>http://example.com/3</link></item></channel></rss>`)
+  },
+  '/tone.wav': (_q, r) => {
+    const rate = 8000
+    const n = rate * 20
+    const b = Buffer.alloc(44 + n * 2)
+    b.write('RIFF', 0)
+    b.writeUInt32LE(36 + n * 2, 4)
+    b.write('WAVEfmt ', 8)
+    b.writeUInt32LE(16, 16)
+    b.writeUInt16LE(1, 20)
+    b.writeUInt16LE(1, 22)
+    b.writeUInt32LE(rate, 24)
+    b.writeUInt32LE(rate * 2, 28)
+    b.writeUInt16LE(2, 32)
+    b.writeUInt16LE(16, 34)
+    b.write('data', 36)
+    b.writeUInt32LE(n * 2, 40)
+    for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(Math.sin((i / rate) * 2 * Math.PI * 440) * 300), 44 + i * 2)
+    r.writeHead(200, { 'Content-Type': 'audio/wav' })
+    r.end(b)
+  },
+  '/media': (_q, r) => html(r, 'Media', `<script>navigator.mediaSession.metadata = new MediaMetadata({ title: 'Test Tone', artist: 'Auralis' })</script><audio id="a" src="/tone.wav" autoplay loop></audio>`),
   '/download': (_q, r) => {
     r.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Disposition': 'attachment; filename="auralis-test.bin"' })
     r.end(Buffer.alloc(64 * 1024, 7))

@@ -34,6 +34,15 @@ export function Toolbar({ state, active, settings, setAnchor }: { state: WindowS
           <Icon name="layers" />
         </button>
         <ShieldButton active={active} settings={settings} />
+        <button
+          className={`glass-btn${settings.sidebar ? ' is-on' : ''}`}
+          title={settings.sidebar ? 'Hide the Sidebar' : 'Show the Sidebar'}
+          aria-label="Sidebar"
+          aria-pressed={settings.sidebar}
+          onClick={() => void call('settings.set', { sidebar: !settings.sidebar })}
+        >
+          <Icon name="sidebar" />
+        </button>
         {showDownloads && (
           <button
             ref={setAnchor('downloads')}
@@ -185,6 +194,9 @@ function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: Se
     pickIndex.current = null
   }, [active?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // A click into the page takes focus from the address bar.
+  useEffect(() => bridge().on('page.focus', () => inputRef.current?.blur()), [])
+
   useEffect(
     () =>
       bridge().on('omnibox.focus', (p) => {
@@ -306,6 +318,16 @@ function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: Se
           </div>
         )}
       </div>
+      {!!active?.feeds.length && !focused && (
+        <button
+          className="field-btn feed-btn"
+          title={active.feeds.length === 1 ? `View feed: ${active.feeds[0].title || 'this site’s feed'}` : `View feeds (${active.feeds.length})`}
+          aria-label="View this site’s feed"
+          onClick={() => void call('feed.open', active.feeds[0].url)}
+        >
+          <img src="/art/feed.svg" width={16} height={16} alt="" />
+        </button>
+      )}
       {active?.readerable && !focused && (
         <button className="field-btn" title="Reader view (F9)" aria-label="Reader view" onClick={() => void call('tool.run', 'reader')}>
           <Icon name="reader" />

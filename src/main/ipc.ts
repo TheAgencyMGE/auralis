@@ -15,7 +15,7 @@ import { accept, omniboxDismiss, omniboxInput, omniboxMove } from './omnibox'
 import * as menus from './menus'
 import { runCommand } from './commands'
 import { clearFinishedDownloads, downloadAction, listDownloads } from './downloads'
-import { getArticle, geocode, meter, processRows, thumbsFor, topSites, weather } from './tools'
+import { currencyRates, fetchFeed, getArticle, geocode, meter, processRows, thumbsFor, topSites, weather } from './tools'
 import { allowHttpFor, shieldStats } from './shield'
 import { parseChromiumJson, parseNetscapeHtml, BAR_ID } from './data/bookmarks'
 import { logger, logFilePath } from './log'
@@ -96,6 +96,14 @@ const tabArg = (c: Caller, id: unknown): Tab => {
   const t = needWin(c).tabById(int(id))
   if (!t) throw new Invalid('no such tab')
   return t
+}
+
+/** Settings each non-settings caller may change: only its own presentation. */
+const SETTABLE: Record<string, readonly string[]> = {
+  chrome: ['widgets', 'notes', 'weatherLocation', 'temperatureUnit', 'sidebar', 'newsFeed', 'currencyBase', 'currencyQuotes'],
+  newtab: ['widgets', 'notes', 'wallpaper', 'weatherLocation', 'temperatureUnit', 'aeroSounds', 'newsFeed', 'currencyBase', 'currencyQuotes'],
+  welcome: ['searchEngine', 'frameColor', 'wallpaper', 'transparency', 'startupSound', 'splash', 'welcomed', 'showBookmarksBar'],
+  feed: ['newsFeed', 'widgets']
 }
 
 const handlers: Record<string, Handler> = {
@@ -273,6 +281,13 @@ const handlers: Record<string, Handler> = {
   'space.switch': (c, id) => needWin(c).switchSpace(str(id, 64)),
   'tool.run': (c, id) => runCommand(needWin(c), str(id, 64)),
   'status.dismiss': () => undefined,
+  'media.control': (c, id, action) => void tabArg(c, id).mediaControl(oneOf(action, ['toggle', 'back', 'forward'] as const)),
+  'infobar.action': (c, id, action) => needWin(c).infobarAction(str(id, 100), oneOf(action, ['once', 'always', 'open', 'show', 'dismiss'] as const)),
+  'feed.open': (c, url) => {
+    const u = str(url, 2048)
+    if (!/^https?:\/\//i.test(u)) throw new Invalid('web feed expected')
+    needWin(c).activeTab?.navigate(`${SCHEME}://feed/?url=${encodeURIComponent(u)}`)
+  },
 
   // overlay
   'overlay.measured': (c, token, size) => {
@@ -293,11 +308,9 @@ const handlers: Record<string, Handler> = {
   'settings.get': () => settings.get(),
   'settings.set': (c, patch) => {
     const p = obj(patch)
-    if (c.role === 'page' && c.page === 'newtab') {
-      // The new tab page may only change its own presentation.
-      const allowed = ['widgets', 'notes', 'wallpaper', 'weatherLocation', 'temperatureUnit', 'aeroSounds']
-      for (const k of Object.keys(p)) if (!allowed.includes(k)) throw new Invalid(`newtab may not set ${k}`)
-    }
+    const who = c.role === 'chrome' ? 'chrome' : c.role === 'page' ? c.page! : null
+    const allowed = who ? SETTABLE[who] : undefined
+    if (allowed) for (const k of Object.keys(p)) if (!allowed.includes(k)) throw new Invalid(`${who} may not set ${k}`)
     return settings.set(p)
   },
 
@@ -308,6 +321,11 @@ const handlers: Record<string, Handler> = {
   'weather.get': () => weather(),
   'geo.search': (_c, q) => geocode(str(q, 100)),
   'meter.get': () => meter([...BrowserWin.all.values()]),
+  'feed.get': (c, url) => fetchFeed(c.win?.session ?? session.defaultSession, str(url, 2048)),
+  'currency.get': () => {
+    const s = settings.get()
+    return s.currencyQuotes.length ? currencyRates(s.currencyBase, s.currencyQuotes.filter((q) => q !== s.currencyBase)) : { rates: {} }
+  },
 
   // history
   'history.search': (c, q, before) => {

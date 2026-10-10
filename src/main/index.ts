@@ -19,7 +19,7 @@ import { initSessionStore, scheduleSave, onWindowClosing, onWindowClosed, flushO
 import { pickScreen, promptPermission } from './menus'
 import { installDownloads, onDownloadComplete, onDownloadStarted, onDownloadsChanged, hasActiveDownloads } from './downloads'
 import { logger } from './log'
-import { NEW_TAB_URL } from '../shared/url'
+import { NEW_TAB_URL, SCHEME } from '../shared/url'
 
 const log = logger('main')
 const started = Date.now()
@@ -121,7 +121,7 @@ async function boot(): Promise<void> {
   })
   onDownloadComplete((d) => {
     const w = BrowserWin.lastFocused
-    w?.toast(`Downloaded “${d.filename}”`, 'download')
+    w?.showDownloadNotice(d.id, d.filename)
     if (settings.get().aeroSounds) w?.send('sound', 'chime')
   })
   onBlocked((wcId) => {
@@ -146,6 +146,17 @@ async function boot(): Promise<void> {
     new BrowserWin({ initialUrls: urls.length ? urls : [first] })
   }
   if (inPrivate) new BrowserWin({ incognito: true })
+
+  // Tests start quietly unless they are testing the first run itself.
+  const quiet = process.env.AURALIS_E2E === '1' && process.env.AURALIS_FIRST_RUN !== '1'
+  const main = BrowserWin.lastFocused
+  if (main && !quiet) {
+    if (!s.welcomed) main.createTab({ url: `${SCHEME}://welcome/` })
+    main.whenChromeReady(() => {
+      if (s.splash) main.splash()
+      if (s.startupSound) main.send('sound', 'startup')
+    })
+  }
   log.info(`ready in ${Date.now() - started} ms`, restore ? `(restored ${previous!.windows.length} window(s))` : '')
 
   setInterval(sleepIdleTabs, 60_000).unref()

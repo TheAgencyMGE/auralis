@@ -86,6 +86,18 @@ function Appearance({ s }: { s: Settings }) {
       <Row label="Aero sounds" help="A water drop when you add a favorite and a glass chime when a download finishes." htmlFor="sounds">
         <input id="sounds" type="checkbox" className="toggle" checked={s.aeroSounds} onChange={(e) => set({ aeroSounds: e.target.checked })} />
       </Row>
+      <Row label="Startup sound" help="A wind chime when Auralis starts." htmlFor="startsound">
+        <input id="startsound" type="checkbox" className="toggle" checked={s.startupSound} onChange={(e) => set({ startupSound: e.target.checked })} />
+      </Row>
+      <Row label="Startup splash" help="The globe fades in on the glass for a moment when Auralis starts." htmlFor="splash">
+        <input id="splash" type="checkbox" className="toggle" checked={s.splash} onChange={(e) => set({ splash: e.target.checked })} />
+      </Row>
+      <Row label="Busy pointer while pages load" help="The Aero “working in background” pointer shows until the page has loaded." htmlFor="busy">
+        <input id="busy" type="checkbox" className="toggle" checked={s.busyCursor} onChange={(e) => set({ busyCursor: e.target.checked })} />
+      </Row>
+      <Row label="Show the Sidebar" help="Gadgets on the glass beside every page." htmlFor="sidebar">
+        <input id="sidebar" type="checkbox" className="toggle" checked={s.sidebar} onChange={(e) => set({ sidebar: e.target.checked })} />
+      </Row>
       <Row label="Preview tabs on hover" help="A thumbnail of the page appears when you rest the pointer on a tab." htmlFor="previews">
         <input id="previews" type="checkbox" className="toggle" checked={s.tabPreviews} onChange={(e) => set({ tabPreviews: e.target.checked })} />
       </Row>
@@ -179,6 +191,25 @@ function Privacy({ s }: { s: Settings }) {
                 <span className="row-title">{h}</span>
                 <span style={{ flex: 1 }} />
                 <button className="icon-btn" aria-label={`Remove ${h}`} onClick={() => set({ shieldAllowlist: s.shieldAllowlist.filter((x) => x !== h) })}>
+                  <Icon name="close" size={10} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {s.popupAllowlist.length > 0 && (
+        <div className="cp-row" style={{ alignItems: 'flex-start' }}>
+          <span className="cp-row-text">
+            Sites allowed to open pop-ups
+            <small>Every other site needs a click before it can open a pop-up.</small>
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 240 }}>
+            {s.popupAllowlist.map((h) => (
+              <div key={h} className="row sel" style={{ minHeight: 26 }}>
+                <span className="row-title">{h}</span>
+                <span style={{ flex: 1 }} />
+                <button className="icon-btn" aria-label={`Remove ${h}`} onClick={() => set({ popupAllowlist: s.popupAllowlist.filter((x) => x !== h) })}>
                   <Icon name="close" size={10} />
                 </button>
               </div>

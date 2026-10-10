@@ -9,11 +9,17 @@ import { certificateFor } from './web-session'
 import { logger } from './log'
 import { decodeIco, isIco } from './ico'
 import { EXTERNAL_SCHEMES, NEW_TAB_URL, SCHEME, WEB_SCHEMES, hostOf, internalPage, securityOf } from '../shared/url'
-import type { FindState, TabState } from '../shared/types'
+import type { FeedLink, FindState, MediaState, TabState } from '../shared/types'
 
 const log = logger('tab')
 const PAGE_PRELOAD = () => path.join(__dirname, '../preload/index.js')
 const MAX_PAGE_STATE = 64 * 1024
+/** Input that counts as the user asking for something (and so may open a pop-up). */
+const GESTURES = new Set(['mouseDown', 'mouseUp', 'rawKeyDown', 'keyDown', 'gestureTap', 'touchEnd'])
+/** Chromium's transient user activation lasts about this long. */
+const GESTURE_MS = 5000
+/** The Aero "working in background" pointer, only while the page loads. */
+const BUSY_CSS = 'html, html * { cursor: progress !important; }'
 
 export interface TabError {
   type: 'network' | 'cert' | 'https' | 'crash' | 'blocked'
@@ -37,6 +43,7 @@ export interface TabHost {
   htmlFullscreen(tab: Tab, on: boolean): void
   keyInput(tab: Tab, input: Electron.Input): boolean
   newTabPageReady(tab: Tab): void
+  pageFocused(tab: Tab): void
 }
 
 export interface TabInit {
@@ -74,6 +81,15 @@ export class Tab {
   find: FindState = { open: false, text: '', active: 0, matches: 0 }
   openerId: number | null
   readerable = false
+  feeds: FeedLink[] = []
+  media: MediaState | null = null
+  /** pop-up URLs blocked on the current page, newest last */
+  blockedPopups: string[] = []
+  /** when the user last clicked or typed in this page */
+  lastGesture = 0
+  private busyCss: string | null = null
+  /** the page has made sound: silent background videos never get a mini player */
+  private heard = false
   private entries: NavigationEntry[] | null
   private entryIndex: number | undefined
   private pendingTyped = false
@@ -284,7 +300,44 @@ export class Tab {
       shieldActive: isShieldActiveFor(url),
       bookmarked: activeSpaceBookmarks.has(url),
       readerable: this.readerable,
-      isNewTab: url.startsWith(NEW_TAB_URL) || url === 'about:blank'
+      isNewTab: url.startsWith(NEW_TAB_URL) || url === 'about:blank',
+      feeds: this.feeds,
+      media: this.heard ? this.media : null,
+      popupsBlocked: this.blockedPopups.length
+    }
+  }
+
+  /** A click or key press a moment ago allows one pop-up, like Chromium's user activation. */
+  consumeGesture(): boolean {
+    const ok = Date.now() - this.lastGesture < GESTURE_MS
+    if (ok) this.lastGesture = 0
+    return ok
+  }
+
+  /** Mini player buttons: act on the page's playing (or most recent) media element. */
+  async mediaControl(action: 'toggle' | 'back' | 'forward'): Promise<void> {
+    const wc = this.wc
+    if (!wc) return
+    const step = action === 'back' ? -10 : action === 'forward' ? 10 : 0
+    try {
+      await wc.executeJavaScriptInIsolatedWorld(
+        997,
+        [
+          {
+            code: `(() => {
+              const all = [...document.querySelectorAll('video, audio')];
+              const m = all.find((e) => !e.paused) || all.find((e) => e.currentTime > 0) || all[0];
+              if (!m) return false;
+              if (${step} === 0) { if (m.paused) m.play().catch(() => {}); else m.pause(); }
+              else m.currentTime = Math.max(0, Math.min(m.duration || Infinity, m.currentTime + ${step}));
+              return true;
+            })()`
+          }
+        ],
+        true
+      )
+    } catch {
+      /* navigated away */
     }
   }
 
@@ -349,6 +402,30 @@ export class Tab {
     wc.on('before-input-event', (e, input) => {
       if (host.keyInput(this, input)) e.preventDefault()
     })
+    // The chrome's own document doesn't always see focus leave for a web view.
+    wc.on('focus', () => host.pageFocused(this))
+    wc.on('input-event', (_e, input) => {
+      if (GESTURES.has(input.type)) this.lastGesture = Date.now()
+    })
+    wc.on('media-started-playing', () => {
+      this.media = { title: this.media?.title ?? '', artist: this.media?.artist ?? '', playing: true }
+      host.changed(this)
+      void this.readMediaMetadata()
+    })
+    wc.on('media-paused', () => {
+      if (!this.media) return
+      this.media = { ...this.media, playing: false }
+      host.changed(this)
+    })
+    wc.on('dom-ready', () => {
+      if (this.loading && !this.busyCss && settings.get().busyCursor && /^https?:/.test(wc.getURL())) {
+        // Author origin: Electron can't remove user-origin sheets again.
+        void wc.insertCSS(BUSY_CSS).then((key) => {
+          if (this.loading && !wc.isDestroyed()) this.busyCss = key
+          else if (!wc.isDestroyed()) void wc.removeInsertedCSS(key).catch(() => {})
+        }).catch(() => {})
+      }
+    })
 
     wc.on('did-start-loading', () => {
       this.loading = true
@@ -359,12 +436,21 @@ export class Tab {
     })
     wc.on('did-stop-loading', () => {
       this.loading = false
+      if (this.busyCss) {
+        void wc.removeInsertedCSS(this.busyCss).catch(() => {})
+        this.busyCss = null
+      }
       host.changed(this)
       void this.checkReaderable()
+      void this.detectFeeds()
     })
     wc.on('did-start-navigation', (e) => {
       if (e.isMainFrame && !e.isSameDocument) {
         this.readerable = false
+        this.feeds = []
+        this.media = null
+        this.heard = false
+        this.blockedPopups = []
         if (!e.url.startsWith(`${SCHEME}://error`)) resetBlocked(wc.id)
       }
     })
@@ -425,6 +511,7 @@ export class Tab {
     })
     wc.on('audio-state-changed', (e) => {
       this.audible = e.audible
+      if (e.audible) this.heard = true
       host.changed(this)
     })
     wc.on('enter-html-full-screen', () => host.htmlFullscreen(this, true))
@@ -499,6 +586,45 @@ export class Tab {
       }
     } catch (err) {
       log.debug('favicon failed', url, err)
+    }
+  }
+
+  /** IE7's orange feed button: find feeds the page links to. */
+  private async detectFeeds(): Promise<void> {
+    const wc = this.wc
+    if (!wc || !/^https?:/.test(wc.getURL())) return
+    try {
+      const found = (await wc.executeJavaScriptInIsolatedWorld(999, [
+        {
+          code: `[...document.querySelectorAll('link[rel~="alternate" i][href]')]
+            .filter((l) => ['application/rss+xml', 'application/atom+xml'].includes((l.type || '').trim().toLowerCase()) && /^https?:/.test(l.href))
+            .slice(0, 8)
+            .map((l) => ({ title: (l.title || '').slice(0, 200), url: l.href }))`
+        }
+      ])) as FeedLink[] | null
+      const feeds = Array.isArray(found) ? found.filter((f) => typeof f?.url === 'string' && typeof f.title === 'string') : []
+      if (JSON.stringify(feeds) !== JSON.stringify(this.feeds)) {
+        this.feeds = feeds
+        this.host.changed(this)
+      }
+    } catch {
+      /* navigated away */
+    }
+  }
+
+  /** Title and artist from the Media Session API, when the site sets them. */
+  private async readMediaMetadata(): Promise<void> {
+    const wc = this.wc
+    if (!wc) return
+    try {
+      const m = (await wc.executeJavaScriptInIsolatedWorld(997, [
+        { code: `(() => { const d = navigator.mediaSession && navigator.mediaSession.metadata; return d ? { title: String(d.title || ''), artist: String(d.artist || '') } : null })()` }
+      ])) as { title: string; artist: string } | null
+      if (!this.media) return
+      this.media = { ...this.media, title: m?.title.slice(0, 200) ?? '', artist: m?.artist.slice(0, 200) ?? '' }
+      this.host.changed(this)
+    } catch {
+      /* navigated away */
     }
   }
 

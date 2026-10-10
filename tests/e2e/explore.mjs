@@ -5,6 +5,7 @@ import { _electron as electron } from 'playwright'
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import http from 'node:http'
 
 const [profile, outDir, scenario = 'basic'] = process.argv.slice(2)
 fs.mkdirSync(outDir, { recursive: true })
@@ -169,6 +170,97 @@ try {
     await ntp.click('text=Wallpaper')
     await wait(800)
     shot('picker')
+  }
+  if (scenario === 'more') {
+    // A local site with a feed, a sound, a scripted pop-up and a download.
+    const wav = (() => {
+      const rate = 8000, secs = 30, n = rate * secs, b = Buffer.alloc(44 + n * 2)
+      b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22)
+      b.writeUInt32LE(rate, 24); b.writeUInt32LE(rate * 2, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40)
+      for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(Math.sin((i / rate) * 2 * Math.PI * 440) * 600), 44 + i * 2)
+      return b
+    })()
+    const server = http.createServer((req, res) => {
+      const html = (t, body) => (res.writeHead(200, { 'content-type': 'text/html' }), res.end(`<!doctype html><title>${t}</title>${body}`))
+      if (req.url === '/tone.wav') return res.writeHead(200, { 'content-type': 'audio/wav' }), res.end(wav)
+      if (req.url === '/file.zip') return res.writeHead(200, { 'content-type': 'application/zip', 'content-disposition': 'attachment; filename="photos-2009.zip"' }), res.end(Buffer.alloc(4096))
+      if (req.url === '/rss') return res.writeHead(200, { 'content-type': 'application/rss+xml' }), res.end(`<?xml version="1.0"?><rss version="2.0"><channel><title>Aero Times</title><link>http://127.0.0.1/</link><description>News from the glass age</description>${['Windows Vista ships to consumers', 'Zune gets a firmware update', 'Frutiger Aero returns', 'Sidebar gadgets gallery opens', 'IE7 adds tabs and feeds'].map((t, i) => `<item><title>${t}</title><link>http://127.0.0.1/a${i}</link><pubDate>${new Date(Date.UTC(2007, 0, 30 - i)).toUTCString()}</pubDate><description>&lt;p&gt;Story ${i + 1}: ${t}.&lt;/p&gt;</description></item>`).join('')}</channel></rss>`)
+      if (req.url === '/media') return html('Radio', `<script>navigator.mediaSession.metadata = new MediaMetadata({ title: 'Sunrise over the bay', artist: 'Aero FM' })</script><audio src="/tone.wav" autoplay loop controls></audio>`)
+      if (req.url === '/popup') return html('Pop-up page', `<p>This page opens a pop-up by itself.</p><script>setTimeout(() => window.open('/rss', 'ad', 'width=300,height=200'), 400)</script>`)
+      return html('Aero Times', `<link rel="alternate" type="application/rss+xml" title="Aero Times" href="/rss"><h1>Aero Times</h1><p>Glass, gloss and grass.</p>`)
+    })
+    await new Promise((r) => server.listen(0, '127.0.0.1', r))
+    const base = `http://127.0.0.1:${server.address().port}`
+    const W = (fn, arg) => app.evaluate(fn, arg)
+    const nav = (url) => W((_e, u) => { const w = [...globalThis.__auralis.BrowserWin.all.values()][0]; w.activeTab.navigate(u) }, url)
+    // splash
+    // The splash lasts under two seconds; hold it still for the (slow) screenshot.
+    await W(() => { const w = [...globalThis.__auralis.BrowserWin.all.values()][0]; w.showOverlay({ content: { kind: 'splash' }, anchor: { x: 0, y: 0, width: 0, height: 0 }, align: 'center', modal: true, passive: true }) })
+    await wait(800)
+    await overlay.evaluate(() => document.querySelectorAll('.ov-modal, .splash').forEach((e) => (e.style.animation = 'none')))
+    shot('m01-splash')
+    await W(() => [...globalThis.__auralis.BrowserWin.all.values()][0].overlay.hide())
+    if (process.env.ONLY_SPLASH) throw new Error('done')
+    if (process.env.ONLY_FLIP) {
+      await W(() => { const w = [...globalThis.__auralis.BrowserWin.all.values()][0]; for (const u of ['https://en.wikipedia.org/wiki/Frutiger_Aero', 'https://en.wikipedia.org/wiki/Windows_Vista', 'https://example.com/', 'auralis://newtab/']) w.createTab({ url: u }, { activate: true }) })
+      await wait(5000)
+      await W(() => { const a = globalThis.__auralis; a.runCommand([...a.BrowserWin.all.values()][0], 'flip-3d') })
+      await wait(1500)
+      shot('m09-flip3d')
+      await overlay.keyboard.press('ArrowDown')
+      await wait(800)
+      shot('m10-flip3d-next')
+      throw new Error('done')
+    }
+    // welcome
+    await nav('auralis://welcome/')
+    await wait(1500)
+    shot('m02-welcome')
+    // new tab with every gadget and a new live wallpaper
+    await W(() => globalThis.__auralis.settings.set({ wallpaper: 'live:rain', widgets: { analogClock: true, slideshow: true, news: true, currency: true, meter: false, notes: false, aquarium: false }, newsFeed: 'https://feeds.bbci.co.uk/news/rss.xml', weatherLocation: { name: 'Honolulu, Hawaii, United States', lat: 21.3, lon: -157.85 } }))
+    await nav('auralis://newtab/')
+    await wait(4000)
+    shot('m03-ntp')
+    // feed detection and the feed view
+    await nav(base + '/')
+    await wait(1500)
+    await W(() => [...globalThis.__auralis.BrowserWin.all.values()][0].activeTab.wc.focus())
+    await wait(600)
+    shot('m04-feedbutton')
+    await chrome.click('.feed-btn', { timeout: 5000 })
+    await wait(1500)
+    shot('m05-feedview')
+    // sidebar beside a page, with the mini player playing
+    await W(() => globalThis.__auralis.settings.set({ sidebar: true, widgets: { aquarium: true, notes: true } }))
+    await nav(base + '/media')
+    await wait(2500)
+    shot('m06-sidebar-player')
+    console.log('media', JSON.stringify(await W(() => [...globalThis.__auralis.BrowserWin.all.values()][0].state().tabs.map((t) => t.media))))
+    await W(() => globalThis.__auralis.settings.set({ sidebar: false }))
+    // pop-up blocked
+    await nav(base + '/popup')
+    await wait(1800)
+    shot('m07-popup')
+    // download finished
+    await nav(base + '/file.zip')
+    await wait(2000)
+    shot('m08-download')
+    // Flip 3D over several tabs
+    await W((_e, b) => { const w = [...globalThis.__auralis.BrowserWin.all.values()][0]; for (const u of ['https://en.wikipedia.org/wiki/Frutiger_Aero', 'https://en.wikipedia.org/wiki/Windows_Vista', b + '/', 'auralis://newtab/']) w.createTab({ url: u }, { activate: true }) }, base)
+    await wait(5000)
+    await W(() => { const a = globalThis.__auralis; a.runCommand([...a.BrowserWin.all.values()][0], 'flip-3d') })
+    await wait(1500)
+    shot('m09-flip3d')
+    await overlay.keyboard.press('ArrowDown')
+    await wait(700)
+    shot('m10-flip3d-next')
+    await overlay.keyboard.press('Escape')
+    // Aero Basic
+    await W(() => globalThis.__auralis.settings.set({ transparency: false }))
+    await wait(1200)
+    shot('m11-basic')
+    await W(() => globalThis.__auralis.settings.set({ transparency: true }))
+    server.close()
   }
 } catch (err) {
   console.error(err)
