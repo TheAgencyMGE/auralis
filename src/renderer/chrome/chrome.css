@@ -1321,3 +1321,89 @@ button.status-cell:hover {
   display: block;
   image-rendering: auto;
 }
+
+/* =====================================================================
+   Frutiger Aero brightness: sky-coloured glass with white gloss, the way
+   the era's wallpapers and ads looked. These override the base rules above.
+   ===================================================================== */
+
+/* The glass takes its colour from the swatch over a light cyan (not grey)
+   luminosity layer, with a sun bloom at the top left and a gloss band
+   across the title row. */
+.frame {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0, rgba(255, 255, 255, 0.16) 21px, rgba(255, 255, 255, 0) 22px),
+    radial-gradient(90% 160px at 12% -30px, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%),
+    repeating-linear-gradient(
+      112deg,
+      rgba(255, 255, 255, 0) 0 70px,
+      rgba(255, 255, 255, 0.07) 70px 86px,
+      rgba(255, 255, 255, 0) 86px 130px,
+      rgba(255, 255, 255, 0.045) 130px 136px,
+      rgba(255, 255, 255, 0) 136px 230px
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--frame-tint) calc(var(--frame-alpha) * 100%), rgba(150, 228, 255, 0.55)) 0%,
+      color-mix(in srgb, var(--frame-tint) calc(var(--frame-alpha) * 112%), rgba(90, 200, 255, 0.6)) 100%
+    );
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 40, 90, 0.55),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+.frame.is-inactive {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0, rgba(255, 255, 255, 0.12) 21px, rgba(255, 255, 255, 0) 22px),
+    color-mix(in srgb, color-mix(in srgb, var(--frame-tint) 65%, #b9d3e6) calc(var(--frame-alpha) * 85%), rgba(200, 235, 255, 0.45));
+}
+
+/* Glossy white glass for the navigation row, with the classic mid-line. */
+.navrow {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.93) 0%, rgba(240, 250, 255, 0.88) 48%, rgba(214, 240, 255, 0.86) 52%, rgba(230, 247, 255, 0.9) 100%);
+  border-top-color: rgba(0, 50, 110, 0.4);
+}
+.glass-btn {
+  color: var(--aqua-deep);
+}
+
+/* Favorites bar: aqua gloss rather than grey. */
+.favbar {
+  background: linear-gradient(180deg, #ffffff 0%, #eaf8ff 48%, #cbeeff 52%, #e0f6ff 100%);
+  border-bottom-color: #6fb5e3;
+}
+.favbar-empty {
+  color: var(--ink-soft);
+}
+
+/* Tabs: brighter glass, a cleaner white for the one in front. */
+.tab {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.24) 48%, rgba(255, 255, 255, 0.08) 52%, rgba(200, 240, 255, 0.28) 100%);
+  border-color: rgba(0, 45, 100, 0.4);
+}
+.tab:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(230, 248, 255, 0.45) 48%, rgba(150, 220, 255, 0.35) 52%, rgba(190, 240, 255, 0.55) 100%);
+}
+.tab.is-active {
+  background: linear-gradient(180deg, #ffffff 0%, rgba(250, 254, 255, 0.97) 48%, rgba(235, 248, 255, 0.95) 52%, rgba(240, 250, 255, 0.95) 100%);
+}
+
+/* Status bar: a gloss band on the coloured glass, bright white text. */
+.statusbar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0) 51%, rgba(255, 255, 255, 0.1) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  color: #fff;
+  text-shadow: 0 0 5px rgba(0, 50, 110, 0.85), 0 1px 1px rgba(0, 40, 90, 0.7);
+}
+.frame.is-opaque .statusbar {
+  color: #10233d;
+  text-shadow: none;
+}
+.status-cell {
+  border-left-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Sidebar title reads as white on the brighter glass. */
+.side-title {
+  color: #fff;
+  text-shadow: 0 0 5px rgba(0, 50, 110, 0.85);
+}

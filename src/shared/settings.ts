@@ -16,18 +16,18 @@ export type SearchEngineId = keyof typeof SEARCH_ENGINES
 
 /** Vista's "Window Color and Appearance" swatches, retuned for 2026. */
 export const FRAME_COLORS = {
-  sky: { name: 'Sky', tint: '#3d8fd6' },
-  aqua: { name: 'Aqua', tint: '#14aecb' },
-  lime: { name: 'Lime', tint: '#6cbf2a' },
-  twilight: { name: 'Twilight', tint: '#3654a8' },
-  sea: { name: 'Sea', tint: '#1f9aa6' },
-  leaf: { name: 'Leaf', tint: '#4f9f3a' },
-  ruby: { name: 'Ruby', tint: '#b4363d' },
-  amber: { name: 'Amber', tint: '#d0862a' },
-  rose: { name: 'Rose', tint: '#c8578f' },
-  violet: { name: 'Violet', tint: '#7a55c4' },
-  graphite: { name: 'Graphite', tint: '#4a5562' },
-  frost: { name: 'Frost', tint: '#9fb6c8' }
+  sky: { name: 'Sky', tint: '#1a9cf5' },
+  aqua: { name: 'Aqua', tint: '#00b8e6' },
+  lime: { name: 'Lime', tint: '#5cc81e' },
+  twilight: { name: 'Twilight', tint: '#2f5fd0' },
+  sea: { name: 'Sea', tint: '#00a8a8' },
+  leaf: { name: 'Leaf', tint: '#3fae2a' },
+  ruby: { name: 'Ruby', tint: '#d42a3c' },
+  amber: { name: 'Amber', tint: '#f08c00' },
+  rose: { name: 'Rose', tint: '#e8509a' },
+  violet: { name: 'Violet', tint: '#8a4fe0' },
+  graphite: { name: 'Graphite', tint: '#4a5a6c' },
+  frost: { name: 'Frost', tint: '#8cc8ee' }
 } as const
 
 export type FrameColorId = keyof typeof FRAME_COLORS

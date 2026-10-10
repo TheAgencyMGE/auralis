@@ -1429,3 +1429,24 @@ kbd {
     transform: scale(0.92);
   }
 }
+
+/* ---- Frutiger Aero brightness ---------------------------------------------------------- */
+
+.ov-appmenu {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.08) 26px, rgba(255, 255, 255, 0) 27px),
+    linear-gradient(180deg, color-mix(in srgb, var(--frame-tint) 85%, #8fe0ff), color-mix(in srgb, var(--frame-tint) 92%, #0a3f8a));
+}
+/* The right column is bright azure glass, not night sky. */
+.am-right {
+  background:
+    radial-gradient(120% 90px at 30% 0%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, rgba(40, 170, 255, 0.85) 0%, rgba(10, 110, 220, 0.85) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.am-link {
+  text-shadow: 0 1px 2px rgba(0, 40, 100, 0.8);
+}
+.ov-modal {
+  background: radial-gradient(120% 90% at 50% 0%, rgba(30, 120, 210, 0.35), rgba(5, 40, 90, 0.6));
+}

@@ -13,15 +13,15 @@
   --ink-soft: #35516b;
   --ink-faint: #6a8094;
   --ink-on-glass: #08233b;
-  --link: #0b5fb4;
-  --link-hover: #1a7ee0;
-  --heading: #1a3f8f; /* Vista "main instruction" blue */
+  --link: #0068d6;
+  --link-hover: #0a8cff;
+  --heading: #0f55b8; /* Vista "main instruction" blue, brightened */
 
   /* ---- light, water, life ---- */
-  --aqua: #2f9de3;
-  --aqua-deep: #145a9e;
-  --life: #6cc23a;
-  --life-deep: #3f8f1f;
+  --aqua: #12a5f4;
+  --aqua-deep: #0a64c4;
+  --life: #5fcf1f;
+  --life-deep: #2f9a12;
   --sun: #f2b632;
   --alert: #d2382f;
   --alert-glow: #ff6a4d;
@@ -40,14 +40,14 @@
   --hairline-strong: rgba(18, 52, 86, 0.28);
 
   /* ---- Vista / 7 Explorer selection ---- */
-  --sel-hover-bg: linear-gradient(180deg, #f2f9fe 0%, #d6edfc 100%);
-  --sel-hover-edge: #b8d6f0;
-  --sel-bg: linear-gradient(180deg, #e2f1fd 0%, #c0e0fa 100%);
-  --sel-edge: #7eb4ea;
+  --sel-hover-bg: linear-gradient(180deg, #f0faff 0%, #cdeeff 100%);
+  --sel-hover-edge: #9fd6f7;
+  --sel-bg: linear-gradient(180deg, #dcf3ff 0%, #a9dcff 100%);
+  --sel-edge: #4fb0f0;
   --sel-inset: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
 
   /* ---- popups (the overlay cannot blur what is under it) ---- */
-  --popup-bg: linear-gradient(180deg, rgba(252, 254, 255, 0.985) 0%, rgba(238, 245, 251, 0.985) 100%);
+  --popup-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(232, 247, 255, 0.99) 100%);
   --popup-edge: rgba(40, 78, 120, 0.55);
   --popup-shadow: 0 10px 28px rgba(6, 30, 56, 0.32), 0 2px 6px rgba(6, 30, 56, 0.2);
   --popup-radius: 7px;

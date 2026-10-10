@@ -1592,3 +1592,45 @@ html[data-unsafe] body {
   color: var(--ink-soft);
   line-height: 1.5;
 }
+
+/* ---- Frutiger Aero brightness ---------------------------------------------------------- */
+
+/* Real footage and photos, colour-graded the way the era printed them:
+   richer sky and grass, a touch more light. No dark veil. */
+.ntp-wall,
+.ntp-live {
+  filter: saturate(1.28) contrast(1.05) brightness(1.05);
+}
+.ntp-shade {
+  background:
+    linear-gradient(180deg, rgba(0, 60, 130, 0.18) 0%, rgba(0, 60, 130, 0) 22%),
+    linear-gradient(0deg, rgba(0, 50, 110, 0.2) 0%, rgba(0, 50, 110, 0) 18%);
+}
+.ntp.tone-dark .ntp-shade {
+  background: linear-gradient(180deg, rgba(0, 20, 50, 0.12), rgba(0, 20, 50, 0.06));
+}
+
+/* Control Panel pages: sky at the top fading to white, the task pane a
+   bright sky-to-meadow column. */
+html:not([data-page='newtab']):not([data-page='reader']):not([data-page='welcome']):not([data-unsafe]) body {
+  background: linear-gradient(180deg, #d6f1ff 0%, #f3fbff 150px, #ffffff 320px);
+}
+.cp {
+  background: transparent;
+}
+.cp-pane {
+  background:
+    radial-gradient(140% 120px at 20% 0%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, #bfe9ff 0%, #def5ff 45%, #e9f9e0 85%, #d4f2bf 100%);
+  border-right: 1px solid #8fcdf0;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.8);
+}
+.cp-brand {
+  color: var(--heading);
+}
+.cp-group > h2 {
+  color: var(--heading);
+}
+.cp-head h1 {
+  color: var(--heading);
+}
