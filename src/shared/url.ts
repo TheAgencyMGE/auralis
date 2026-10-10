@@ -18,7 +18,8 @@ export const INTERNAL_PAGES = [
   'error',
   'about',
   'welcome',
-  'feed'
+  'feed',
+  'extensions'
 ] as const
 export type InternalPage = (typeof INTERNAL_PAGES)[number]
 
@@ -49,7 +50,7 @@ export function isInternalUrl(url: string): boolean {
 
 /** Schemes a tab may navigate to. Anything else is handed to the OS (after
  *  confirmation) or dropped. */
-export const WEB_SCHEMES = new Set(['http:', 'https:', 'file:', `${SCHEME}:`, 'about:', 'data:', 'blob:', 'view-source:'])
+export const WEB_SCHEMES = new Set(['http:', 'https:', 'file:', `${SCHEME}:`, 'about:', 'data:', 'blob:', 'view-source:', 'chrome-extension:'])
 
 /** Schemes that may be passed to shell.openExternal after the user confirms. */
 export const EXTERNAL_SCHEMES = new Set(['mailto:', 'tel:', 'sms:', 'callto:', 'magnet:', 'ms-settings:', 'zoommtg:', 'msteams:', 'slack:', 'spotify:', 'steam:', 'discord:', 'webcal:'])

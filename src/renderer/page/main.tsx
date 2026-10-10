@@ -15,7 +15,8 @@ const pages = {
   error: lazy(() => import('./pages/ErrorPage')),
   about: lazy(() => import('./pages/About')),
   welcome: lazy(() => import('./pages/Welcome')),
-  feed: lazy(() => import('./pages/FeedView'))
+  feed: lazy(() => import('./pages/FeedView')),
+  extensions: lazy(() => import('./pages/Extensions'))
 } as const
 
 const host = location.hostname as keyof typeof pages

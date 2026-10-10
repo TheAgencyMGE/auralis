@@ -12,6 +12,7 @@ import { downloadAction, listDownloads } from './downloads'
 import { certificateFor, PERMISSION_LABELS, PROMPTABLE, type PromptResult } from './web-session'
 import { blockedFor, isShieldActiveFor } from './shield'
 import { thumbsFor } from './tools'
+import { contextMenuItems } from './extensions'
 import { SEARCH_ENGINES } from '../shared/settings'
 import { NEW_TAB_URL, hostOf, originOf, resolveInput, searchUrl, securityOf, siteKey } from '../shared/url'
 import type { Rect, SiteInfo, Space, SpaceColor } from '../shared/types'
@@ -110,6 +111,12 @@ export function showPageMenu(win: BrowserWin, tab: Tab, p: ContextMenuParams): v
     )
     sep()
   }
+  const fromExtensions = contextMenuItems(wc, p, win)
+  if (fromExtensions.length) {
+    sep()
+    items.push(...fromExtensions)
+    sep()
+  }
   if (/^https?:/.test(wc.getURL())) items.push({ label: 'View page source', accelerator: 'Ctrl+U', click: () => runCommand(win, 'view-source') })
   items.push({ label: 'Inspect', accelerator: 'F12', click: () => wc.inspectElement(p.x, p.y) })
   win.menu(at, items)
@@ -162,7 +169,7 @@ export function showTabMenu(win: BrowserWin, tab: Tab, anchor: Rect): void {
 // ---- app menu (the Auralis orb) ---------------------------------------------------------
 
 const APP_LEFT = ['new-tab', 'new-window', 'new-private', '-', 'find', 'print', 'save-page', 'screenshot', 'reader', 'split-view', 'tab-flip', 'flip-3d', 'toggle-sidebar']
-const APP_RIGHT = ['favorites', 'history', 'downloads', 'task-manager', 'settings', 'welcome', 'about']
+const APP_RIGHT = ['favorites', 'history', 'downloads', 'extensions', 'task-manager', 'settings', 'welcome', 'about']
 
 export function showAppMenu(win: BrowserWin, anchor: Rect): void {
   const tab = win.activeTab

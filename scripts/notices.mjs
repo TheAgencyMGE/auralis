@@ -126,6 +126,12 @@ as stock footage.
   https://commons.wikimedia.org/wiki/File:Feed-icon.svg
 - Currency rates: Frankfurter (https://frankfurter.dev), European Central Bank
   reference rates.
+- Dangerous-site lists, downloaded at runtime from the malware-filter project
+  (https://gitlab.com/malware-filter): Phishing Domains Blocklist (CC BY-SA 4.0;
+  sources OpenPhish, PhishTank, IPThreat) and Malicious Domains Blocklist
+  (CC0; source URLhaus by abuse.ch). Checked locally; nothing is sent.
+- Chrome extensions are installed from the Chrome Web Store at the user's
+  request and are not distributed with Auralis.
 - Feed Headlines default feed: BBC News (https://www.bbc.co.uk/news), fetched at
   runtime and shown as headlines that link to the BBC.
 - Text is set in Segoe UI, which is part of Windows and is not distributed

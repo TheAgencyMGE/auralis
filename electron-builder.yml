@@ -10,6 +10,7 @@ files:
   - package.json
   - build/icon.ico
   - THIRD_PARTY_NOTICES.md
+  - LICENSE
 asar: true
 # Each node_modules package that ships is a real runtime dependency; renderer
 # and bundled libraries live inside out/.

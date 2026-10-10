@@ -499,3 +499,78 @@ test('the busy pointer shows while a page loads, then goes away', async () => {
   await expect(h.chrome.locator('.frame.is-busy')).toHaveCount(0, { timeout: 8000 })
   await until(() => page.evaluate(() => getComputedStyle(document.body).cursor), (c) => c === 'auto')
 })
+
+// ---- extensions, dangerous sites, background previews ----------------------------------------
+
+test('a reported phishing site is stopped with a warning, and can be opened anyway', async () => {
+  h = await launch()
+  await h.app.evaluate(() => (globalThis as any).__auralis.setSafetyListsForTest([['127.0.0.1', 'phishing']]))
+  await omniboxGo(h, server.url('/a'))
+  const warn = await h.page('auralis://error')
+  await expect(warn.locator('.unsafe h1')).toHaveText('This website has been reported as unsafe')
+  await expect(warn.locator('.unsafe')).toContainText('phishing')
+  // Nothing from the site loaded.
+  expect((await h.state()).tabs[0].title).not.toBe('Page A')
+  await warn.locator('.unsafe-more summary').click()
+  await warn.locator('.unsafe-ignore').click()
+  await until(h.state, (s) => s.tabs[0].title === 'Page A')
+})
+
+test('tabs opened in the background get a preview picture without being viewed', async () => {
+  h = await launch()
+  await h.app.evaluate((_e, u) => [...(globalThis as any).__auralis.BrowserWin.all.values()][0].createTab({ url: u }, { activate: false }), server.url('/c'))
+  await until(
+    () => h.app.evaluate(() => { const w = [...(globalThis as any).__auralis.BrowserWin.all.values()][0]; return w.tabs[1]?.thumbnail?.length ?? 0 }),
+    (n) => n > 1000,
+    10_000
+  )
+  // It was never shown: the first tab stayed active.
+  const s = await h.state()
+  expect(s.active).toBe(s.tabs[0].id)
+  // The picture is kept on disk for when the tab comes back asleep.
+  await until(() => Promise.resolve(fs.existsSync(path.join(h.profile, 'thumbnails')) ? fs.readdirSync(path.join(h.profile, 'thumbnails')).length : 0), (n) => n > 0)
+})
+
+test('Chrome extensions load, show a toolbar button and popup, and run on pages', async () => {
+  const profile = tempProfile()
+  const dir = path.join(profile, 'test-extension')
+  fs.mkdirSync(dir)
+  fs.writeFileSync(
+    path.join(dir, 'manifest.json'),
+    JSON.stringify({
+      manifest_version: 3,
+      name: 'Glass Test',
+      version: '1.0',
+      description: 'An extension for the Auralis tests.',
+      action: { default_title: 'Glass Test', default_popup: 'popup.html' },
+      content_scripts: [{ matches: ['http://127.0.0.1/*'], js: ['content.js'] }]
+    })
+  )
+  fs.writeFileSync(path.join(dir, 'popup.html'), '<!doctype html><body style="width:220px;height:120px;margin:0">Hello from the popup</body>')
+  fs.writeFileSync(path.join(dir, 'content.js'), "document.documentElement.dataset.glassTest = 'ran'")
+  fs.writeFileSync(path.join(profile, 'settings.json'), JSON.stringify({ unpackedExtensions: [dir] }))
+  h = await launch(profile)
+  await expect(h.chrome.locator('.ext-btn[title="Glass Test"]')).toBeVisible()
+  await omniboxGo(h, server.url('/a'))
+  await until(h.state, (s) => s.tabs[0].title === 'Page A')
+  const page = await h.page(server.url('/a'))
+  await until(() => page.evaluate(() => document.documentElement.dataset.glassTest ?? ''), (v) => v === 'ran')
+  await h.chrome.locator('.ext-btn[title="Glass Test"]').click()
+  const popup = await until(
+    () => h.app.evaluate(({ BrowserWindow }) => {
+      const b = BrowserWindow.getAllWindows().find((x) => x.webContents.getURL().startsWith('chrome-extension://'))
+      return b ? { visible: b.isVisible(), ...b.getBounds() } : null
+    }),
+    (b) => !!b && b.visible && b.width >= 200 && b.height >= 100
+  )
+  expect(popup!.width).toBeLessThan(400)
+  // The Extensions page lists it and can remove it.
+  await h.app.evaluate(() => { const a = (globalThis as any).__auralis; a.runCommand([...a.BrowserWin.all.values()][0], 'extensions') })
+  const ext = await h.page('auralis://extensions')
+  await expect(ext.locator('.ext-row')).toContainText('Glass Test')
+  await expect(ext.locator('.ext-tag')).toHaveText('Unpacked')
+  await ext.locator('.ext-row .btn.is-danger').click()
+  await h.overlay.locator('button', { hasText: 'Remove' }).click()
+  await expect(h.chrome.locator('.ext-btn')).toHaveCount(0)
+  await expect(ext.locator('.ext-row')).toHaveCount(0)
+})

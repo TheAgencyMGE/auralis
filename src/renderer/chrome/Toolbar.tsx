@@ -33,6 +33,26 @@ export function Toolbar({ state, active, settings, setAnchor }: { state: WindowS
         <button className="glass-btn" title="Tab Flip (Ctrl+Shift+A)" aria-label="Tab Flip" onClick={() => void call('tool.run', 'tab-flip')}>
           <Icon name="layers" />
         </button>
+        {state?.extensions.map((a) => (
+          <button
+            key={a.id}
+            className="glass-btn ext-btn"
+            title={a.title}
+            aria-label={a.title}
+            onClick={(e) => void call('extensions.activate', a.id, rectOf(e.currentTarget))}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              void call('extensions.menu', a.id, rectOf(e.currentTarget))
+            }}
+          >
+            {a.icon ? <img src={a.icon} width={16} height={16} alt="" /> : <Icon name="extensions" />}
+            {a.badge && (
+              <span className="badge" style={{ background: a.badgeColor }}>
+                {a.badge.slice(0, 4)}
+              </span>
+            )}
+          </button>
+        ))}
         <ShieldButton active={active} settings={settings} />
         <button
           className={`glass-btn${settings.sidebar ? ' is-on' : ''}`}

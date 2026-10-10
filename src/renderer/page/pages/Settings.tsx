@@ -166,7 +166,7 @@ function Search({ s }: { s: Settings }) {
 }
 
 function Privacy({ s }: { s: Settings }) {
-  const [stats, setStats] = useState<{ ready: boolean; updated: number; totalBlocked: number } | null>(null)
+  const [stats, setStats] = useState<{ ready: boolean; updated: number; totalBlocked: number; safety: { hosts: number; updated: number } } | null>(null)
   useEffect(() => {
     void call<typeof stats>('shield.stats').then(setStats)
   }, [])
@@ -217,6 +217,17 @@ function Privacy({ s }: { s: Settings }) {
           </div>
         </div>
       )}
+      <Row
+        label="Warn me about dangerous sites"
+        help={
+          stats?.safety.hosts
+            ? `Checks every site you open against ${stats.safety.hosts.toLocaleString()} reported phishing and malware sites, on this computer. Lists updated ${relativeTime(stats.safety.updated)}.`
+            : 'Checks sites against reported phishing and malware lists, on this computer. The lists download the first time you’re online.'
+        }
+        htmlFor="safe"
+      >
+        <input id="safe" type="checkbox" className="toggle" checked={s.safeBrowsing} onChange={(e) => set({ safeBrowsing: e.target.checked })} />
+      </Row>
       <Row label="Always use secure connections" help="Auralis upgrades sites to HTTPS and asks before loading one that only works without it." htmlFor="https">
         <input id="https" type="checkbox" className="toggle" checked={s.httpsFirst} onChange={(e) => set({ httpsFirst: e.target.checked })} />
       </Row>

@@ -14,6 +14,7 @@ import type { InfoBar, MenuItem, OverlayContent, OverlayRequest, Rect, Space, Sp
 import { logger } from './log'
 import { BAR_ID } from './data/bookmarks'
 import { downloadAction, downloadsSummary } from './downloads'
+import { actionsFor, selectedTab, trackTab } from './extensions'
 
 const log = logger('window')
 
@@ -270,7 +271,10 @@ export class BrowserWin implements TabHost {
     }
     this.tabs.splice(Math.min(index, this.tabs.length), 0, tab)
     if (opts.activate !== false) this.activate(tab)
-    else if (!init.asleep) tab.ensureLoaded()
+    else if (!init.asleep) {
+      tab.ensureLoaded()
+      trackTab(this, tab)
+    }
     this.pushState()
     return tab
   }
@@ -283,6 +287,7 @@ export class BrowserWin implements TabHost {
     tab.lastActive = Date.now()
     if (prev) prev.lastActive = Date.now()
     tab.ensureLoaded()
+    selectedTab(this, tab)
     // Keep a split only while both of its tabs are the ones on screen.
     const split = this.splitBySpace.get(this.activeSpaceId)
     if (split && split.left !== tab.id && split.right !== tab.id) this.splitBySpace.delete(this.activeSpaceId)
@@ -634,6 +639,52 @@ export class BrowserWin implements TabHost {
     if (tab === this.activeTab && !this.overlay.isOpen() && (this.win.isFocused() || !this.chrome.isFocused())) this.focusOmnibox()
   }
 
+  /**
+   * Background tabs are never painted, so they'd have no preview until
+   * viewed. Once one finishes loading, slip it under the active page for a
+   * moment (fully covered, never seen), take its picture, and detach it.
+   */
+  private thumbQueue: Tab[] = []
+  private thumbBusy = false
+
+  backgroundLoaded(tab: Tab): void {
+    if (this.attached.has(tab) || this.thumbQueue.includes(tab)) return
+    this.thumbQueue.push(tab)
+    if (!this.thumbBusy) void this.drainThumbs()
+  }
+
+  private async drainThumbs(): Promise<void> {
+    this.thumbBusy = true
+    try {
+      // Let late images and fonts settle first.
+      await new Promise((r) => setTimeout(r, 800))
+      for (let tab = this.thumbQueue.shift(); tab; tab = this.thumbQueue.shift()) {
+        const active = this.activeTab
+        const cover = active?.view && this.attached.has(active) && !active.crashed ? active.view.getBounds() : null
+        if (this.win.isDestroyed() || this.win.isMinimized() || !this.win.isVisible() || this.htmlFsTab || !cover) break
+        if (!tab.view || tab.closing || tab.crashed || tab.loading || this.attached.has(tab)) continue
+        this.capturing.add(tab)
+        try {
+          this.win.contentView.addChildView(tab.view, 0)
+          tab.view.setBounds(cover)
+          await tab.captureThumbnail()
+        } finally {
+          this.capturing.delete(tab)
+          if (!this.attached.has(tab) && tab.view && !this.win.isDestroyed()) {
+            try {
+              this.win.contentView.removeChildView(tab.view)
+            } catch {
+              /* already gone */
+            }
+          }
+        }
+      }
+    } finally {
+      this.thumbQueue = []
+      this.thumbBusy = false
+    }
+  }
+
   pageFocused(_tab: Tab): void {
     this.send('page.focus', null)
   }
@@ -685,7 +736,7 @@ export class BrowserWin implements TabHost {
     }
     if (scheme === `${SCHEME}:`) {
       if (!tab.wc?.getURL().startsWith(`${SCHEME}:`) || !internalPage(url)) return { action: 'deny' }
-    } else if (url && !['http:', 'https:', 'about:', 'blob:', 'data:'].includes(scheme)) {
+    } else if (url && !['http:', 'https:', 'about:', 'blob:', 'data:', 'chrome-extension:'].includes(scheme)) {
       return { action: 'deny' }
     }
     if (scheme === 'data:' && !/^data:image\//i.test(url)) return { action: 'deny' }
@@ -904,6 +955,7 @@ export class BrowserWin implements TabHost {
       bookmarksBar: ctx.bookmarks.children(BAR_ID).map((n) => ({ ...n, favicon: n.url ? (ctx.favicons.get(hostOfSafe(n.url))?.data ?? null) : null })),
       status: this.status,
       infobar: this.infobar(),
+      extensions: actionsFor(this),
       busy: !!active?.loading && settings.get().busyCursor
     }
   }

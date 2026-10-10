@@ -116,6 +116,7 @@ export const COMMANDS: Command[] = [
   { id: 'favorites', label: 'Favorites', section: 'Browser', shortcut: 'Ctrl+Shift+O', keywords: 'bookmarks manager', run: (w) => openInternal(w, 'bookmarks') },
   { id: 'toggle-bar', label: 'Show or hide Favorites bar', section: 'Browser', shortcut: 'Ctrl+Shift+B', run: () => settings.set({ showBookmarksBar: !settings.get().showBookmarksBar }) },
   { id: 'toggle-sidebar', label: 'Show or hide the Sidebar', section: 'Browser', keywords: 'gadgets panel widgets', run: () => settings.set({ sidebar: !settings.get().sidebar }) },
+  { id: 'extensions', label: 'Extensions', section: 'Browser', keywords: 'add-ons plugins chrome web store', run: (w) => openInternal(w, 'extensions') },
   { id: 'welcome', label: 'Welcome Center', section: 'Browser', keywords: 'getting started first run tour', run: (w) => openInternal(w, 'welcome') },
   { id: 'toggle-status', label: 'Show or hide status bar', section: 'Browser', shortcut: 'Ctrl+/', run: () => settings.set({ showStatusBar: !settings.get().showStatusBar }) },
   { id: 'settings', label: 'Settings', section: 'Browser', shortcut: 'Ctrl+,', keywords: 'options preferences', run: (w) => openInternal(w, 'settings') },

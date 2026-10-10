@@ -46,6 +46,27 @@ export interface MediaState {
   artist: string
 }
 
+/** An extension's toolbar button, for the active tab. */
+export interface ExtensionAction {
+  id: string
+  title: string
+  badge: string
+  badgeColor: string
+  /** data: URL */
+  icon: string | null
+}
+
+export interface ExtensionInfo {
+  id: string
+  name: string
+  version: string
+  description: string
+  manifestVersion: number
+  icon: string | null
+  options: boolean
+  unpacked: boolean
+}
+
 /** The yellow Information Bar under the toolbar. */
 export interface InfoBar {
   id: string
@@ -106,6 +127,7 @@ export interface WindowState {
   bookmarksBar: BookmarkNode[]
   status: string
   infobar: InfoBar | null
+  extensions: ExtensionAction[]
   /** the active tab is loading and the busy pointer is enabled */
   busy: boolean
 }

@@ -43,6 +43,10 @@ describe('settings sanitizer', () => {
   it('filters the pop-up allowlist to hostnames', () => {
     expect(sanitizeSettings({ popupAllowlist: ['example.com', 'a b', null] }).popupAllowlist).toEqual(['example.com'])
   })
+  it('keeps unpacked extension folders as a short list of paths', () => {
+    expect(sanitizeSettings({ unpackedExtensions: ['C:\ext\one', 5, '', 'C:\ext\one'] }).unpackedExtensions).toEqual(['C:\ext\one'])
+    expect(sanitizeSettings({ safeBrowsing: 'no' }).safeBrowsing).toBe(true)
+  })
   it('accepts the new live wallpapers and rejects unknown ones', () => {
     expect(sanitizeSettings({ wallpaper: 'live:rain' }).wallpaper).toBe('live:rain')
     expect(sanitizeSettings({ wallpaper: 'live:nope' }).wallpaper).toBe(DEFAULT_SETTINGS.wallpaper)

@@ -6,6 +6,8 @@ import path from 'node:path'
 import { ctx, settings } from './context'
 import { blockedFor, resetBlocked, upgradedFrom, clearUpgrade, isShieldActiveFor } from './shield'
 import { certificateFor } from './web-session'
+import { clearStopped, stoppedNavigation, type Threat } from './safety'
+import { cachedThumb, saveThumb } from './thumbs'
 import { logger } from './log'
 import { decodeIco, isIco } from './ico'
 import { EXTERNAL_SCHEMES, NEW_TAB_URL, SCHEME, WEB_SCHEMES, hostOf, internalPage, securityOf } from '../shared/url'
@@ -22,8 +24,9 @@ const GESTURE_MS = 5000
 const BUSY_CSS = 'html, html * { cursor: progress !important; }'
 
 export interface TabError {
-  type: 'network' | 'cert' | 'https' | 'crash' | 'blocked'
+  type: 'network' | 'cert' | 'https' | 'crash' | 'blocked' | 'unsafe'
   url: string
+  threat?: Threat
   code: number
   description: string
 }
@@ -44,6 +47,8 @@ export interface TabHost {
   keyInput(tab: Tab, input: Electron.Input): boolean
   newTabPageReady(tab: Tab): void
   pageFocused(tab: Tab): void
+  /** A tab that isn't on screen finished loading (time for its preview picture). */
+  backgroundLoaded(tab: Tab): void
 }
 
 export interface TabInit {
@@ -347,6 +352,12 @@ export class Tab {
     this.host.changed(this)
   }
 
+  /** The best picture of this tab: the latest capture, else the one kept on disk. */
+  previewImage(): string | null {
+    if (!this.thumbnail && !this.host.incognito) this.thumbnail = cachedThumb(this.displayUrl())
+    return this.thumbnail
+  }
+
   async captureThumbnail(): Promise<string | null> {
     const wc = this.wc
     if (!wc || this.crashed || wc.isLoadingMainFrame()) return this.thumbnail
@@ -356,6 +367,7 @@ export class Tab {
       const { width } = img.getSize()
       const small = width > 480 ? img.resize({ width: 480, quality: 'good' }) : img
       this.thumbnail = 'data:image/jpeg;base64,' + small.toJPEG(72).toString('base64')
+      if (!this.host.incognito) saveThumb(wc.getURL(), this.thumbnail)
     } catch {
       /* page not paintable right now */
     }
@@ -443,6 +455,7 @@ export class Tab {
       host.changed(this)
       void this.checkReaderable()
       void this.detectFeeds()
+      host.backgroundLoaded(this)
     })
     wc.on('did-start-navigation', (e) => {
       if (e.isMainFrame && !e.isSameDocument) {
@@ -478,7 +491,16 @@ export class Tab {
     })
     wc.on('page-favicon-updated', (_e, favicons) => void this.loadFavicon(favicons))
     wc.on('did-fail-load', (_e, code, description, validatedURL, isMainFrame) => {
-      if (!isMainFrame || code === -3 || wc.isDestroyed()) return
+      if (!isMainFrame || wc.isDestroyed()) return
+      const unsafe = stoppedNavigation(wc.id)
+      if (unsafe) {
+        clearStopped(wc.id)
+        this.error = { type: 'unsafe', url: unsafe.url, code, description, threat: unsafe.threat }
+        log.info('dangerous site stopped', unsafe.threat, hostOf(unsafe.url))
+        void wc.loadURL(`${SCHEME}://error/?code=unsafe`).catch(() => {})
+        return
+      }
+      if (code === -3) return
       const upgradedHttp = upgradedFrom(wc.id)
       let type: TabError['type'] = code <= -200 && code > -300 ? 'cert' : code === -20 || code === -21 ? 'blocked' : 'network'
       let url = validatedURL

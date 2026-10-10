@@ -12,6 +12,7 @@ import { FaviconStore } from './data/favicons'
 import { registerSchemePrivileges } from './protocol'
 import { installIpc } from './ipc'
 import { initShield, installShieldIpc, onBlocked } from './shield'
+import { initSafety, setSafetyListsForTest } from './safety'
 import { setPermissionPrompter, setScreenPicker } from './web-session'
 import { BrowserWin, wireWindowHooks } from './window'
 import { handleKey } from './shortcuts'
@@ -95,6 +96,8 @@ async function boot(): Promise<void> {
 
   installShieldIpc()
   void initShield()
+  void initSafety()
+  void import('./thumbs').then((m) => m.pruneThumbs())
   installIpc()
 
   wireWindowHooks({ handleKey, onWindowClosing, onWindowClosed, scheduleSessionSave: scheduleSave })
@@ -133,6 +136,13 @@ async function boot(): Promise<void> {
     { program: process.execPath, arguments: app.isPackaged ? '--inprivate' : `"${app.getAppPath()}" --inprivate`, iconPath: process.execPath, iconIndex: 0, title: 'New InPrivate window', description: 'Browse without saving history' }
   ])
 
+  // Extensions load before the first page so their content scripts apply,
+  // but never hold up startup for long.
+  // With none installed, nothing needs to wait for them.
+  const { initExtensions, hasInstalledExtensions } = await import('./extensions')
+  const extensionsReady = initExtensions().catch((err) => log.error('extensions failed to start', err))
+  if (hasInstalledExtensions()) await Promise.race([extensionsReady, new Promise((r) => setTimeout(r, 1500))])
+
   const { previous, unclean } = initSessionStore()
   const { urls, inPrivate } = parseArgs(process.argv.slice(app.isPackaged ? 1 : 2))
   const s = settings.get()
@@ -164,7 +174,9 @@ async function boot(): Promise<void> {
   // End-to-end tests reach into the main process; never in packaged builds.
   if (process.env.AURALIS_E2E === '1' && !app.isPackaged) {
     const { runCommand } = await import('./commands')
-    Object.assign(globalThis, { __auralis: { BrowserWin, runCommand, ctx, settings, sleepIdleTabs } })
+    const extensions = await import('./extensions')
+    const webStore = await import('electron-chrome-web-store')
+    Object.assign(globalThis, { __auralis: { BrowserWin, runCommand, ctx, settings, sleepIdleTabs, setSafetyListsForTest, extensions, webStore } })
   }
 }
 

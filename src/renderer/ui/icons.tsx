@@ -25,6 +25,7 @@ export const COMMAND_ICONS: Record<string, string> = {
   'flip-3d': 'flip',
   'toggle-sidebar': 'sidebar',
   welcome: 'globe',
+  extensions: 'extensions',
   favorites: 'star',
   bookmark: 'star',
   history: 'history',

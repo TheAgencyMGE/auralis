@@ -225,7 +225,7 @@ export async function thumbsFor(win: BrowserWin, allSpaces = false): Promise<Tab
       title: t.title || t.displayUrl(),
       url: t.displayUrl(),
       favicon: t.favicon,
-      thumbnail: t.thumbnail,
+      thumbnail: t.previewImage(),
       asleep: !t.wc,
       active: t === active,
       spaceId: t.spaceId

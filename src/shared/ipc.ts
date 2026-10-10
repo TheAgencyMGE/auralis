@@ -64,7 +64,9 @@ const CHROME = [
   'geo.search',
   'meter.get',
   'feed.get',
-  'currency.get'
+  'currency.get',
+  'extensions.activate',
+  'extensions.menu'
 ] as const
 
 const OVERLAY = [
@@ -114,7 +116,12 @@ const PAGE = [
   'app.relaunch',
   'app.defaultBrowser',
   'feed.get',
-  'currency.get'
+  'currency.get',
+  'extensions.list',
+  'extensions.remove',
+  'extensions.options',
+  'extensions.loadUnpacked',
+  'extensions.update'
 ] as const
 
 export type ChromeMethod = (typeof CHROME)[number]
@@ -134,6 +141,7 @@ export const PAGE_METHODS: Record<InternalPage, readonly PageMethod[]> = {
   newtab: ['settings.get', 'settings.set', 'nav.go', 'ntp.info', 'ntp.topSites', 'ntp.removeTopSite', 'weather.get', 'geo.search', 'meter.get', 'feed.get', 'currency.get'],
   welcome: ['settings.get', 'settings.set', 'nav.go', 'bookmarks.import', 'app.defaultBrowser'],
   feed: ['settings.get', 'settings.set', 'nav.go', 'feed.get'],
+  extensions: ['settings.get', 'nav.go', 'extensions.list', 'extensions.remove', 'extensions.options', 'extensions.loadUnpacked', 'extensions.update'],
   settings: [
     'settings.get', 'settings.set', 'nav.go', 'data.clear', 'permissions.list', 'permissions.remove', 'shield.stats',
     'dialog.chooseFolder', 'bookmarks.import', 'bookmarks.export', 'app.info', 'geo.search', 'app.relaunch', 'app.defaultBrowser'
@@ -164,7 +172,8 @@ export const EVENTS = [
   'flip.results',
   'palette.results',
   'sound',
-  'page.focus'
+  'page.focus',
+  'extensions'
 ] as const
 export type EventName = (typeof EVENTS)[number]
 

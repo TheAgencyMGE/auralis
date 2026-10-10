@@ -904,6 +904,7 @@ body,
 .confirm-msg {
   color: var(--ink-soft);
   line-height: 1.45;
+  white-space: pre-line;
 }
 .confirm-actions {
   display: flex;

@@ -154,6 +154,10 @@ export interface Settings {
   newsFeed: string
   currencyBase: Currency
   currencyQuotes: Currency[]
+  /** folders of unpacked extensions loaded at startup (developer mode) */
+  unpackedExtensions: string[]
+  /** warn before opening sites on the phishing and malware lists */
+  safeBrowsing: boolean
   /** sites whose pop-ups are never blocked */
   popupAllowlist: string[]
   /** the Welcome Center has been shown once */
@@ -197,6 +201,8 @@ export const DEFAULT_SETTINGS: Settings = {
   currencyBase: 'USD',
   currencyQuotes: ['EUR', 'GBP', 'JPY'],
   popupAllowlist: [],
+  safeBrowsing: true,
+  unpackedExtensions: [],
   welcomed: false,
   weatherLocation: null,
   temperatureUnit: 'c',
@@ -287,6 +293,10 @@ export function sanitizeSettings(input: unknown, base: Settings = DEFAULT_SETTIN
       ? [...new Set(s.popupAllowlist.filter((h): h is string => typeof h === 'string' && /^[a-z0-9.-]{1,253}$/i.test(h)))].slice(0, 5000)
       : d.popupAllowlist,
     welcomed: bool(s.welcomed, d.welcomed),
+    safeBrowsing: bool(s.safeBrowsing, d.safeBrowsing),
+    unpackedExtensions: Array.isArray(s.unpackedExtensions)
+      ? [...new Set(s.unpackedExtensions.filter((p): p is string => typeof p === 'string' && p.length > 2 && p.length < 1024))].slice(0, 50)
+      : d.unpackedExtensions,
     weatherLocation:
       s.weatherLocation === null
         ? null

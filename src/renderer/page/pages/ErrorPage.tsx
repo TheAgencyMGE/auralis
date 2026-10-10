@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { call } from '@ui/api'
 
 interface Info {
-  type: 'network' | 'cert' | 'https' | 'crash' | 'blocked'
+  type: 'network' | 'cert' | 'https' | 'crash' | 'blocked' | 'unsafe'
   url: string
+  threat?: 'phishing' | 'malware'
   code: number
   description: string
 }
@@ -62,6 +63,7 @@ export default function ErrorPage() {
     })
   }, [])
   if (info === undefined) return null
+  if (info?.type === 'unsafe') return <UnsafeSite info={info} />
   if (!info) {
     return (
       <div className="errp">
@@ -121,6 +123,50 @@ export default function ErrorPage() {
           {info.description} ({info.code}) while loading {info.url}
         </p>
       </details>
+    </div>
+  )
+}
+
+/** IE8's SmartScreen page: the whole tab turns red before anything loads. */
+function UnsafeSite({ info }: { info: Info }) {
+  const h = host(info.url)
+  const phishing = info.threat === 'phishing'
+  useEffect(() => {
+    document.title = 'Unsafe website blocked'
+    document.documentElement.dataset.unsafe = ''
+  }, [])
+  return (
+    <div className="unsafe">
+      <div className="unsafe-card">
+        <img className="unsafe-art" src="/emoji/shield.webp" width={72} height={72} alt="" />
+        <div>
+          <h1>This website has been reported as unsafe</h1>
+          <p className="unsafe-host">{h}</p>
+          <p>
+            {phishing
+              ? 'This site has been reported for phishing: it may pretend to be a site you trust to steal your passwords, card numbers or other personal information.'
+              : 'This site has been reported for distributing malware: it may try to install software that harms your computer or steals your information.'}
+          </p>
+          <p>Auralis stopped the page before it loaded. We recommend that you do not continue to this website.</p>
+          <div className="unsafe-actions">
+            <button className="btn is-default" autoFocus onClick={() => void call('error.action', 'back')}>
+              Go back to safety
+            </button>
+          </div>
+          <details className="unsafe-more">
+            <summary>More information</summary>
+            <p>
+              Reported {phishing ? 'phishing' : 'malware'} sites come from community blocklists (
+              {phishing ? 'OpenPhish, PhishTank and IPThreat' : 'URLhaus by abuse.ch'}) that Auralis downloads and checks on this computer. The sites
+              you visit are never sent anywhere for checking.
+            </p>
+            <p>If you understand the risk and believe this report is wrong, you can open the site for the rest of this session.</p>
+            <button className="unsafe-ignore" onClick={() => void call('error.action', 'unsafe-continue')}>
+              Disregard and continue (not recommended)
+            </button>
+          </details>
+        </div>
+      </div>
     </div>
   )
 }

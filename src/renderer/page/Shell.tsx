@@ -8,12 +8,13 @@ const PAGES = [
   { host: 'bookmarks', label: 'Favorites', icon: 'star' },
   { host: 'history', label: 'History', icon: 'history' },
   { host: 'downloads', label: 'Downloads', icon: 'download' },
+  { host: 'extensions', label: 'Extensions', icon: 'extensions' },
   { host: 'taskmanager', label: 'Task Manager', icon: 'gauge' },
   { host: 'about', label: 'About Auralis', icon: 'info' }
 ]
 
 /** Page header art: Fluent Emoji 3D (MIT, Microsoft). */
-const ART: Record<string, string> = { settings: 'gear', star: 'star', history: 'clock', download: 'inbox', gauge: 'chart', info: 'info' }
+const ART: Record<string, string> = { settings: 'gear', star: 'star', history: 'clock', download: 'inbox', gauge: 'chart', info: 'info', extensions: 'puzzle' }
 
 export function Shell({
   icon,

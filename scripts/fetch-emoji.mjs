@@ -38,7 +38,8 @@ const EMOJI = {
   palette: 'Artist palette',
   picture: 'Framed picture',
   magnifier: 'Magnifying glass tilted left',
-  bell: 'Bell'
+  bell: 'Bell',
+  puzzle: 'Puzzle piece'
 }
 
 const failed = []

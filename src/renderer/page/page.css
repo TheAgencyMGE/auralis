@@ -1474,3 +1474,121 @@ html[data-page='welcome'] body {
   color: var(--link);
   font-size: var(--fs-s);
 }
+
+/* ---- dangerous site (IE8 SmartScreen red) ---------------------------------------------- */
+
+html[data-unsafe],
+html[data-unsafe] body {
+  min-height: 100%;
+  background: linear-gradient(180deg, #c8251b 0%, #a3150d 60%, #8e1008 100%);
+}
+.unsafe {
+  min-height: 100vh;
+  display: grid;
+  place-items: start center;
+  padding: 12vh 24px 40px;
+  color: #fff;
+}
+.unsafe-card {
+  display: flex;
+  gap: 22px;
+  max-width: 680px;
+}
+.unsafe-art {
+  flex: none;
+  filter: drop-shadow(0 4px 10px rgba(60, 0, 0, 0.5));
+}
+.unsafe h1 {
+  margin: 4px 0 6px;
+  font-family: var(--font-light);
+  font-weight: 300;
+  font-size: 30px;
+  line-height: 1.2;
+}
+.unsafe-host {
+  margin: 0 0 14px;
+  font-size: var(--fs-l);
+  font-weight: 600;
+}
+.unsafe p {
+  line-height: 1.55;
+  color: rgba(255, 240, 238, 0.95);
+}
+.unsafe-actions {
+  margin: 20px 0 26px;
+}
+.unsafe-more summary {
+  cursor: pointer;
+  color: #ffe1dd;
+}
+.unsafe-ignore {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ffd9d4;
+  text-decoration: underline;
+  font-size: var(--fs-s);
+}
+.unsafe-ignore:hover {
+  color: #fff;
+}
+
+/* ---- Extensions page ------------------------------------------------------------------------ */
+
+.ext-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ext-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+.ext-row:hover {
+  border-color: var(--sel-hover-edge);
+  background: var(--sel-hover-bg);
+}
+.ext-icon {
+  flex: none;
+  color: var(--aqua-deep);
+}
+.ext-text {
+  flex: 1;
+  min-width: 0;
+}
+.ext-name {
+  font-size: var(--fs-m);
+  color: var(--ink);
+}
+.ext-version {
+  color: var(--ink-faint);
+  font-size: var(--fs-s);
+}
+.ext-tag {
+  margin-left: 8px;
+  padding: 0 6px;
+  border: 1px solid #c8d9ea;
+  border-radius: 8px;
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
+}
+.ext-desc {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: var(--fs-s);
+  line-height: 1.4;
+}
+.ext-actions {
+  flex: none;
+  display: flex;
+  gap: 6px;
+}
+.ext-empty p,
+.ext-msg {
+  color: var(--ink-soft);
+  line-height: 1.5;
+}

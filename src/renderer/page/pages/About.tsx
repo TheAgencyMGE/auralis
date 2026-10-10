@@ -107,6 +107,9 @@ export default function About() {
           ))}
         </dl>
       </Group>
+      <Group title="License" intro="Auralis is free software: you can redistribute it and change it under the GNU General Public License, version 3 or later. It comes with no warranty.">
+        <span />
+      </Group>
       <Group title="Open-source software" intro="Auralis is made possible by these projects and their authors.">
         <pre className="notices">{notices || 'Loading…'}</pre>
       </Group>

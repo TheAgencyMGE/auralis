@@ -91,7 +91,8 @@ const MAP = {
   'fast-forward': 'fast_forward',
   flip: 'stack',
   popup: 'window_header_horizontal',
-  'arrow-up': 'arrow_up'
+  'arrow-up': 'arrow_up',
+  extensions: 'puzzle_piece'
 }
 
 // Folder names are Title Case, with a few acronyms in capitals.

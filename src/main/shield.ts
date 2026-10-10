@@ -10,6 +10,7 @@ import { createRequire } from 'node:module'
 import { settings, userFile } from './context'
 import { logger } from './log'
 import { siteKey, SCHEME } from '../shared/url'
+import { noteStopped, threatFor } from './safety'
 
 const log = logger('shield')
 const ENGINE_FILE = () => userFile('shield-engine.bin')
@@ -105,6 +106,15 @@ export function installShield(ses: Session): void {
   ses.webRequest.onBeforeRequest({ urls: ['<all_urls>'] }, (details, callback) => {
     try {
       const url = details.url
+      // Known phishing and malware sites never load; the tab explains why.
+      if (details.resourceType === 'mainFrame' || details.resourceType === 'subFrame') {
+        const threat = threatFor(url)
+        if (threat) {
+          if (details.resourceType === 'mainFrame') noteStopped(details.webContentsId, url, threat)
+          log.info(`stopped ${threat} site`, new URL(url).hostname)
+          return callback({ cancel: true })
+        }
+      }
       // HTTPS-First: upgrade top-level http navigations to public hosts.
       if (details.resourceType === 'mainFrame' && url.startsWith('http:') && settings.get().httpsFirst) {
         const u = new URL(url)

@@ -17,6 +17,8 @@ import { runCommand } from './commands'
 import { clearFinishedDownloads, downloadAction, listDownloads } from './downloads'
 import { currencyRates, fetchFeed, getArticle, geocode, meter, processRows, thumbsFor, topSites, weather } from './tools'
 import { allowHttpFor, shieldStats } from './shield'
+import { allowUnsafeHost, safetyStats } from './safety'
+import * as extensions from './extensions'
 import { parseChromiumJson, parseNetscapeHtml, BAR_ID } from './data/bookmarks'
 import { logger, logFilePath } from './log'
 
@@ -176,7 +178,7 @@ const handlers: Record<string, Handler> = {
     const r = rect(anchor)
     if (t === w.activeTab) await t.captureThumbnail()
     w.showOverlay({
-      content: { kind: 'preview', tab: { id: t.id, title: t.title || t.displayUrl(), url: t.displayUrl(), favicon: t.favicon, thumbnail: t.thumbnail, asleep: !t.wc, active: t === w.activeTab, spaceId: t.spaceId } },
+      content: { kind: 'preview', tab: { id: t.id, title: t.title || t.displayUrl(), url: t.displayUrl(), favicon: t.favicon, thumbnail: t.previewImage(), asleep: !t.wc, active: t === w.activeTab, spaceId: t.spaceId } },
       anchor: r,
       align: 'start',
       passive: true
@@ -281,6 +283,17 @@ const handlers: Record<string, Handler> = {
   'space.switch': (c, id) => needWin(c).switchSpace(str(id, 64)),
   'tool.run': (c, id) => runCommand(needWin(c), str(id, 64)),
   'status.dismiss': () => undefined,
+  'extensions.activate': (c, id, anchor) => extensions.activateAction(needWin(c), str(id, 64), rect(anchor)),
+  'extensions.menu': (c, id, anchor) => extensions.actionMenu(needWin(c), str(id, 64), rect(anchor)),
+  'extensions.list': () => extensions.listExtensions(),
+  'extensions.remove': (c, id) => extensions.removeExtension(str(id, 64), needWin(c)).then((ok) => (ok && notifyExtensionPages(), ok)),
+  'extensions.options': (c, id) => extensions.openOptions(needWin(c), str(id, 64)),
+  'extensions.loadUnpacked': async (c) => {
+    const r = await extensions.loadUnpacked(needWin(c))
+    notifyExtensionPages()
+    return r
+  },
+  'extensions.update': () => extensions.updateAll(),
   'media.control': (c, id, action) => void tabArg(c, id).mediaControl(oneOf(action, ['toggle', 'back', 'forward'] as const)),
   'infobar.action': (c, id, action) => needWin(c).infobarAction(str(id, 100), oneOf(action, ['once', 'always', 'open', 'show', 'dismiss'] as const)),
   'feed.open': (c, url) => {
@@ -436,7 +449,18 @@ const handlers: Record<string, Handler> = {
   'error.action': (c, action) => {
     const t = c.tab
     if (!t?.error) return
-    const a = oneOf(action, ['retry', 'http', 'back'] as const)
+    const a = oneOf(action, ['retry', 'http', 'back', 'unsafe-continue'] as const)
+    if (a === 'unsafe-continue' && t.error.type === 'unsafe') {
+      const url = t.error.url
+      try {
+        allowUnsafeHost(new URL(url).hostname)
+      } catch {
+        return
+      }
+      t.error = null
+      t.navigate(url)
+      return
+    }
     if (a === 'http' && t.error.type === 'https') {
       const url = t.error.url
       try {
@@ -473,7 +497,7 @@ const handlers: Record<string, Handler> = {
   },
   'permissions.list': () => ctx.permissions.all(),
   'permissions.remove': (_c, origin, permission) => ctx.permissions.remove(str(origin, 2048), permission == null ? undefined : str(permission, 64)),
-  'shield.stats': () => shieldStats(),
+  'shield.stats': () => ({ ...shieldStats(), safety: safetyStats() }),
   'dialog.chooseFolder': async (c) => {
     const r = await dialog.showOpenDialog(needWin(c).win, { properties: ['openDirectory', 'createDirectory'], defaultPath: settings.get().downloadDir })
     if (r.canceled || !r.filePaths[0]) return null
@@ -516,6 +540,12 @@ function hostOfUrl(u: string): string {
   } catch {
     return ''
   }
+}
+
+/** Extension pages refresh their list when something was added or removed. */
+function notifyExtensionPages(): void {
+  for (const w of BrowserWin.all.values())
+    for (const t of w.tabs) if (t.wc?.getURL().startsWith(`${SCHEME}://extensions`)) t.wc.send('auralis:event', 'extensions', null)
 }
 
 function refreshBookmarks(): void {
