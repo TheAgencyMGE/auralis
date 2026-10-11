@@ -574,3 +574,36 @@ test('Chrome extensions load, show a toolbar button and popup, and run on pages'
   await expect(h.chrome.locator('.ext-btn')).toHaveCount(0)
   await expect(ext.locator('.ext-row')).toHaveCount(0)
 })
+
+test('your own pictures and videos become new tab wallpapers', async () => {
+  h = await launch()
+  const picture = path.resolve('src/renderer/public/wallpapers/meadow.webp')
+  const video = path.resolve('src/renderer/public/live/turbines.mp4')
+  // Stand in for the file dialog: the user picks a picture and a video.
+  await h.app.evaluate(({ dialog }, files) => {
+    dialog.showOpenDialog = (async () => ({ canceled: false, filePaths: files })) as typeof dialog.showOpenDialog
+  }, [picture, video])
+  const ntp = await h.page('auralis://newtab')
+  await ntp.locator('.ntp-chip', { hasText: 'Wallpaper' }).click()
+  await ntp.locator('.wp-add').click()
+  await expect(ntp.locator('.wp-own')).toHaveCount(2)
+  const s = await h.app.evaluate(() => (globalThis as any).__auralis.settings.get())
+  expect(s.customWallpapers.map((c: any) => c.kind)).toEqual(['image', 'video'])
+  expect(s.wallpaper).toBe(`custom:${s.customWallpapers[1].id}`)
+  // The video streams from the profile and plays.
+  const live = ntp.locator('video.ntp-live')
+  await expect(live).toHaveAttribute('src', /\/user-wallpapers\/[a-f0-9]{16}\.mp4$/)
+  const t0 = await live.evaluate((v: HTMLVideoElement) => v.currentTime)
+  await until(() => live.evaluate((v: HTMLVideoElement) => v.currentTime), (t) => t > t0 + 0.5)
+  // Pick the picture instead.
+  await ntp.locator('.wp-own-pick').first().click()
+  await expect(ntp.locator('.ntp-wall')).toHaveAttribute('style', /user-wallpapers\/[a-f0-9]{16}\.webp/)
+  await expect(ntp.locator('video.ntp-live')).toHaveCount(0)
+  // Removing one deletes its file.
+  const dir = path.join(h.profile, 'wallpapers')
+  const before = fs.readdirSync(dir).length
+  await ntp.locator('.wp-own').first().hover()
+  await ntp.locator('.wp-own-x').first().click()
+  await expect(ntp.locator('.wp-own')).toHaveCount(1)
+  expect(fs.readdirSync(dir).length).toBeLessThan(before)
+})

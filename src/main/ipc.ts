@@ -19,6 +19,7 @@ import { currencyRates, fetchFeed, getArticle, geocode, meter, processRows, thum
 import { allowHttpFor, shieldStats } from './shield'
 import { allowUnsafeHost, safetyStats } from './safety'
 import * as extensions from './extensions'
+import { importWallpapers, removeWallpaper } from './wallpapers'
 import { parseChromiumJson, parseNetscapeHtml, BAR_ID } from './data/bookmarks'
 import { logger, logFilePath } from './log'
 
@@ -294,6 +295,8 @@ const handlers: Record<string, Handler> = {
     return r
   },
   'extensions.update': () => extensions.updateAll(),
+  'wallpaper.import': (c) => importWallpapers(needWin(c)),
+  'wallpaper.remove': (_c, id) => removeWallpaper(str(id, 32)),
   'media.control': (c, id, action) => void tabArg(c, id).mediaControl(oneOf(action, ['toggle', 'back', 'forward'] as const)),
   'infobar.action': (c, id, action) => needWin(c).infobarAction(str(id, 100), oneOf(action, ['once', 'always', 'open', 'show', 'dismiss'] as const)),
   'feed.open': (c, url) => {

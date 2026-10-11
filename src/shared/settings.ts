@@ -69,7 +69,19 @@ export const NEW_WALLPAPERS: readonly WallpaperId[] = ['live:rain', 'live:turbin
 export type PhotoWallpaperId = keyof typeof WALLPAPERS
 export type LiveWallpaperId = keyof typeof LIVE_WALLPAPERS
 /** Live ids are stored as "live:<id>" so they never collide with photos. */
-export type WallpaperId = PhotoWallpaperId | `live:${LiveWallpaperId}`
+export type WallpaperId = PhotoWallpaperId | `live:${LiveWallpaperId}` | `custom:${string}`
+
+/** A picture or video the user added; files live in the profile's wallpapers folder. */
+export interface CustomWallpaper {
+  id: string
+  name: string
+  kind: 'image' | 'video'
+  /** file name inside the wallpapers folder */
+  file: string
+  /** whether a <id>.thumb.jpg exists */
+  thumb: boolean
+  tone: 'light' | 'dark'
+}
 
 export const ALL_WALLPAPER_IDS: WallpaperId[] = [
   ...(Object.keys(LIVE_WALLPAPERS) as LiveWallpaperId[]).map((k) => `live:${k}` as const),
@@ -88,7 +100,16 @@ export interface WallpaperInfo {
   video: string | null
 }
 
-export function wallpaperInfo(id: WallpaperId): WallpaperInfo {
+export function wallpaperInfo(id: WallpaperId, custom: readonly CustomWallpaper[] = []): WallpaperInfo {
+  if (id.startsWith('custom:')) {
+    const c = custom.find((x) => `custom:${x.id}` === id)
+    if (c) {
+      const src = `/user-wallpapers/${c.file}`
+      const thumb = c.thumb ? `/user-wallpapers/${c.id}.thumb.jpg` : ''
+      return { name: c.name, credit: '', source: '', tone: c.tone, live: c.kind === 'video', image: c.kind === 'image' ? src : thumb, thumb: c.kind === 'image' ? thumb || src : thumb, video: c.kind === 'video' ? src : null }
+    }
+    return wallpaperInfo('live:fields')
+  }
   if (id.startsWith('live:')) {
     const key = id.slice(5) as LiveWallpaperId
     const w = LIVE_WALLPAPERS[key] ?? LIVE_WALLPAPERS.fields
@@ -142,6 +163,7 @@ export interface Settings {
   downloadDir: string
   askWhereToSave: boolean
   wallpaper: WallpaperId
+  customWallpapers: CustomWallpaper[]
   widgets: Widgets
   aeroSounds: boolean
   /** chime and glass splash when Auralis starts */
@@ -191,6 +213,7 @@ export const DEFAULT_SETTINGS: Settings = {
   downloadDir: '',
   askWhereToSave: false,
   wallpaper: 'live:fields',
+  customWallpapers: [],
   widgets: { clock: true, weather: true, notes: true, meter: false, topSites: true, aquarium: true, analogClock: true, slideshow: false, news: false, currency: false },
   aeroSounds: true,
   startupSound: true,
@@ -229,6 +252,20 @@ export function isSafeHomePage(url: string): boolean {
   }
 }
 
+function sanitizeCustomWallpapers(v: unknown, d: CustomWallpaper[]): CustomWallpaper[] {
+  if (!Array.isArray(v)) return d
+  const out: CustomWallpaper[] = []
+  for (const w of v) {
+    if (!isObj(w) || typeof w.id !== 'string' || !/^[a-f0-9]{16}$/.test(w.id)) continue
+    if (typeof w.file !== 'string' || !new RegExp(`^${w.id}\\.[a-z0-9]{2,5}$`).test(w.file)) continue
+    if (w.kind !== 'image' && w.kind !== 'video') continue
+    if (out.some((x) => x.id === w.id)) continue
+    out.push({ id: w.id, name: str(w.name, 80, 'Wallpaper'), kind: w.kind, file: w.file, thumb: w.thumb === true, tone: w.tone === 'dark' ? 'dark' : 'light' })
+    if (out.length >= 50) break
+  }
+  return out
+}
+
 /** News feeds are fetched by the main process; only plain web URLs. */
 export function isFeedUrl(url: string): boolean {
   try {
@@ -245,6 +282,7 @@ export function sanitizeSettings(input: unknown, base: Settings = DEFAULT_SETTIN
   const w = isObj(s.widgets) ? s.widgets : {}
   const loc = isObj(s.weatherLocation) ? s.weatherLocation : null
   const homePage = str(s.homePage, 2048, d.homePage)
+  const customWallpapers = sanitizeCustomWallpapers(s.customWallpapers, d.customWallpapers)
   return {
     startup: oneOf(s.startup, ['restore', 'newtab', 'home'] as const, d.startup),
     homePage: isSafeHomePage(homePage) ? homePage : d.homePage,
@@ -266,7 +304,11 @@ export function sanitizeSettings(input: unknown, base: Settings = DEFAULT_SETTIN
     globalPrivacyControl: bool(s.globalPrivacyControl, d.globalPrivacyControl),
     downloadDir: str(s.downloadDir, 1024, d.downloadDir),
     askWhereToSave: bool(s.askWhereToSave, d.askWhereToSave),
-    wallpaper: oneOf(s.wallpaper, ALL_WALLPAPER_IDS, d.wallpaper),
+    customWallpapers,
+    wallpaper:
+      typeof s.wallpaper === 'string' && s.wallpaper.startsWith('custom:') && customWallpapers.some((c) => `custom:${c.id}` === s.wallpaper)
+        ? (s.wallpaper as WallpaperId)
+        : oneOf(s.wallpaper, ALL_WALLPAPER_IDS, d.wallpaper),
     widgets: {
       clock: bool(w.clock, d.widgets.clock),
       weather: bool(w.weather, d.widgets.weather),

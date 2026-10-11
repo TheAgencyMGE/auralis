@@ -1634,3 +1634,83 @@ html:not([data-page='newtab']):not([data-page='reader']):not([data-page='welcome
 .cp-head h1 {
   color: var(--heading);
 }
+
+/* ---- your own wallpapers ------------------------------------------------------------------ */
+
+.wp-thumb > span,
+.wp-own-pick > span {
+  display: block;
+  max-width: 104px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wp-own {
+  position: relative;
+  padding: 0;
+}
+.wp-own-pick {
+  display: block;
+  width: 100%;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-xs);
+}
+.wp-own-kind {
+  margin-right: 3px;
+  vertical-align: -1px;
+  color: var(--aqua-deep);
+}
+.wp-own-blank,
+.wp-add-box {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 64px;
+  margin-bottom: 4px;
+  border-radius: 3px;
+}
+.wp-own-blank {
+  background: linear-gradient(180deg, #d8f0ff, #a9dbfb);
+  color: var(--aqua-deep);
+}
+.wp-add-box {
+  border: 1px dashed #5fb2e8;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(214, 240, 255, 0.9));
+  color: var(--aqua-deep);
+}
+.wp-add:hover .wp-add-box {
+  border-style: solid;
+  background: linear-gradient(180deg, #ffffff 0%, #e2f6ff 48%, #b9e5ff 52%, #d6f2ff 100%);
+}
+.wp-own-x {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  background: rgba(10, 40, 80, 0.55);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+}
+.wp-own:hover .wp-own-x,
+.wp-own-x:focus-visible {
+  opacity: 1;
+}
+.wp-own-x:hover {
+  border-color: #8d2a20;
+  background: linear-gradient(180deg, #f08a72 0%, #d9472d 50%, #c4301c 51%, #db5a3c 100%);
+}
+.wp-errors {
+  margin: 6px 2px 2px;
+  color: var(--alert);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}

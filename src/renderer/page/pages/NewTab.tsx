@@ -52,7 +52,7 @@ function NormalTab() {
   const [now, setNow] = useState(new Date())
   const [picker, setPicker] = useState(false)
   const [customize, setCustomize] = useState(false)
-  const wp = wallpaperInfo(s.wallpaper)
+  const wp = wallpaperInfo(s.wallpaper, s.customWallpapers)
   // With the window's own Sidebar open, the page's gadget column steps aside.
   const hasGadgets = !s.sidebar && hasSidebarGadgets(s.widgets)
 
@@ -102,12 +102,14 @@ function NormalTab() {
         <button className="ntp-chip" onClick={() => setCustomize((p) => !p)} aria-expanded={customize}>
           <Icon name="spaces" size={14} /> Gadgets
         </button>
-        <a className="ntp-credit" href={wp.source} onClick={(e) => (e.preventDefault(), void call('nav.go', wp.source))}>
-          {wp.live ? 'Video' : 'Photo'} by {wp.credit} on {wp.live ? 'Pexels' : 'Unsplash'}
-        </a>
+        {wp.source && (
+          <a className="ntp-credit" href={wp.source} onClick={(e) => (e.preventDefault(), void call('nav.go', wp.source))}>
+            {wp.live ? 'Video' : 'Photo'} by {wp.credit} on {wp.live ? 'Pexels' : 'Unsplash'}
+          </a>
+        )}
       </footer>
 
-      {picker && <WallpaperPicker current={s.wallpaper} onClose={() => setPicker(false)} />}
+      {picker && <WallpaperPicker s={s} onClose={() => setPicker(false)} />}
       {customize && <GadgetPicker s={s} onClose={() => setCustomize(false)} />}
     </div>
   )
@@ -180,7 +182,15 @@ function TopSites({ sites, onRemove }: { sites: Site[]; onRemove: (host: string)
 
 // ---- customisation -----------------------------------------------------------------------
 
-function WallpaperPicker({ current, onClose }: { current: WallpaperId; onClose: () => void }) {
+function WallpaperPicker({ s, onClose }: { s: Settings; onClose: () => void }) {
+  const current = s.wallpaper
+  const [busy, setBusy] = useState(false)
+  const [errors, setErrors] = useState<string[]>([])
+  const add = async () => {
+    setBusy(true)
+    const r = await call<{ added: number; errors: string[] }>('wallpaper.import').finally(() => setBusy(false))
+    setErrors(r.errors)
+  }
   const live = ALL_WALLPAPER_IDS.filter((id) => id.startsWith('live:'))
   const photos = ALL_WALLPAPER_IDS.filter((id) => !id.startsWith('live:'))
   const tile = (id: WallpaperId) => {
@@ -203,6 +213,40 @@ function WallpaperPicker({ current, onClose }: { current: WallpaperId; onClose: 
           <Icon name="close" size={10} />
         </button>
       </div>
+      <div className="wp-section">Yours</div>
+      <div className="wp-grid">
+        {s.customWallpapers.map((c) => {
+          const id = `custom:${c.id}` as WallpaperId
+          const w = wallpaperInfo(id, s.customWallpapers)
+          return (
+            <div key={c.id} className={`wp-thumb wp-own${id === current ? ' is-on' : ''}`}>
+              <button className="wp-own-pick" onClick={() => void call('settings.set', { wallpaper: id })} aria-pressed={id === current} title={c.name}>
+                {w.thumb ? <img src={w.thumb} alt="" /> : <span className="wp-own-blank"><Icon name={c.kind === 'video' ? 'video' : 'image'} size={22} /></span>}
+                <span>
+                  {c.kind === 'video' && <Icon name="video" size={11} className="wp-own-kind" />}
+                  {c.name}
+                </span>
+              </button>
+              <button className="wp-own-x" aria-label={`Remove ${c.name}`} title="Remove" onClick={() => void call('wallpaper.remove', c.id)}>
+                <Icon name="close" size={8} />
+              </button>
+            </div>
+          )
+        })}
+        <button className="wp-thumb wp-add" onClick={() => void add()} disabled={busy}>
+          <span className="wp-add-box">
+            <Icon name="plus" size={22} />
+          </span>
+          <span>{busy ? 'Adding…' : 'Add your own…'}</span>
+        </button>
+      </div>
+      {errors.length > 0 && (
+        <div className="wp-errors" role="alert">
+          {errors.map((e) => (
+            <div key={e}>{e}</div>
+          ))}
+        </div>
+      )}
       <div className="wp-section">Live</div>
       <div className="wp-grid">{live.map(tile)}</div>
       <div className="wp-section">Photos</div>

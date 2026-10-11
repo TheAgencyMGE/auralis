@@ -121,7 +121,9 @@ const PAGE = [
   'extensions.remove',
   'extensions.options',
   'extensions.loadUnpacked',
-  'extensions.update'
+  'extensions.update',
+  'wallpaper.import',
+  'wallpaper.remove'
 ] as const
 
 export type ChromeMethod = (typeof CHROME)[number]
@@ -138,7 +140,7 @@ export const ROLE_METHODS: Record<Role, readonly string[]> = {
 /** Which internal page may call which page methods. Least privilege: the new
  *  tab page cannot clear history, the history page cannot change settings. */
 export const PAGE_METHODS: Record<InternalPage, readonly PageMethod[]> = {
-  newtab: ['settings.get', 'settings.set', 'nav.go', 'ntp.info', 'ntp.topSites', 'ntp.removeTopSite', 'weather.get', 'geo.search', 'meter.get', 'feed.get', 'currency.get'],
+  newtab: ['settings.get', 'settings.set', 'nav.go', 'ntp.info', 'ntp.topSites', 'ntp.removeTopSite', 'weather.get', 'geo.search', 'meter.get', 'feed.get', 'currency.get', 'wallpaper.import', 'wallpaper.remove'],
   welcome: ['settings.get', 'settings.set', 'nav.go', 'bookmarks.import', 'app.defaultBrowser'],
   feed: ['settings.get', 'settings.set', 'nav.go', 'feed.get'],
   extensions: ['settings.get', 'nav.go', 'extensions.list', 'extensions.remove', 'extensions.options', 'extensions.loadUnpacked', 'extensions.update'],

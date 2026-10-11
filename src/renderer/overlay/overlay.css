@@ -1450,3 +1450,17 @@ kbd {
 .ov-modal {
   background: radial-gradient(120% 90% at 50% 0%, rgba(30, 120, 210, 0.35), rgba(5, 40, 90, 0.6));
 }
+
+/* App menu: room for the longest label and its shortcut on one line. */
+.appmenu {
+  width: 600px;
+}
+.am-label {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.am-item .mi-accel {
+  padding-left: 12px;
+}
