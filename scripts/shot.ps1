@@ -1,7 +1,7 @@
 # Captures the Auralis window (or the whole primary screen) to a PNG, including
 # the desktop acrylic behind it, which is what the user actually sees.
 param([string]$Out = "shot.png", [string]$Title = "Auralis", [int]$ProcessId = 0)
-Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Drawing, System.Windows.Forms
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -10,6 +10,7 @@ public class Win {
   [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
   [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr h, int a, out RECT r, int s);
   [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
+  [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
   public struct RECT { public int L, T, R, B; }
 }
 "@
@@ -18,7 +19,11 @@ if ($ProcessId -gt 0) { $p = Get-Process -Id $ProcessId } else { $p = Get-Proces
 if (-not $p) { Write-Error "window not found"; exit 1 }
 $h = $p.MainWindowHandle
 [Win]::SetForegroundWindow($h) | Out-Null
-Start-Sleep -Milliseconds 400
+# Park the pointer at the left edge of the screen, away from the window and the
+# taskbar, so no hover effect or taskbar preview ends up in the picture.
+$screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+[Win]::SetCursorPos($screen.Left + 2, $screen.Top + [int]($screen.Height / 2)) | Out-Null
+Start-Sleep -Milliseconds 900
 $r = New-Object Win+RECT
 [Win]::DwmGetWindowAttribute($h, 9, [ref]$r, 16) | Out-Null
 $w = $r.R - $r.L; $hgt = $r.B - $r.T
