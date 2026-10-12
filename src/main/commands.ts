@@ -80,7 +80,7 @@ export const COMMANDS: Command[] = [
   { id: 'next-space', label: 'Next space', section: 'Spaces', shortcut: 'Ctrl+Shift+]', run: (w) => cycleSpace(w, 1) },
   { id: 'prev-space', label: 'Previous space', section: 'Spaces', shortcut: 'Ctrl+Shift+[', run: (w) => cycleSpace(w, -1) },
   // navigation
-  { id: 'focus-address', label: 'Focus address bar', section: 'Navigation', shortcut: 'Ctrl+L', run: (w) => w.focusOmnibox() },
+  { id: 'focus-address', label: 'Focus address bar', section: 'Navigation', shortcut: 'Ctrl+L', run: (w) => w.focusOmnibox(true, true) },
   { id: 'back', label: 'Back', section: 'Navigation', shortcut: 'Alt+Left', run: (_w, t) => t?.wc?.navigationHistory.goBack() },
   { id: 'forward', label: 'Forward', section: 'Navigation', shortcut: 'Alt+Right', run: (_w, t) => t?.wc?.navigationHistory.goForward() },
   { id: 'reload', label: 'Reload', section: 'Navigation', shortcut: 'Ctrl+R', run: (_w, t) => t?.reload() },

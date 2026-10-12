@@ -103,9 +103,9 @@ const tabArg = (c: Caller, id: unknown): Tab => {
 
 /** Settings each non-settings caller may change: only its own presentation. */
 const SETTABLE: Record<string, readonly string[]> = {
-  chrome: ['widgets', 'notes', 'weatherLocation', 'temperatureUnit', 'sidebar', 'newsFeed', 'currencyBase', 'currencyQuotes'],
+  chrome: ['widgets', 'notes', 'weatherLocation', 'temperatureUnit', 'sidebar', 'newsFeed', 'currencyBase', 'currencyQuotes', 'sidebarCompact'],
   newtab: ['widgets', 'notes', 'wallpaper', 'weatherLocation', 'temperatureUnit', 'aeroSounds', 'newsFeed', 'currencyBase', 'currencyQuotes'],
-  welcome: ['searchEngine', 'frameColor', 'wallpaper', 'transparency', 'startupSound', 'splash', 'welcomed', 'showBookmarksBar'],
+  welcome: ['searchEngine', 'frameColor', 'wallpaper', 'transparency', 'startupSound', 'splash', 'welcomed', 'showBookmarksBar', 'uiStyle'],
   feed: ['newsFeed', 'widgets']
 }
 

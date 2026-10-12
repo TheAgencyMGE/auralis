@@ -143,7 +143,14 @@ export type Widgets = {
 /** Gadgets added in the latest release get a "New" badge in the gadget list. */
 export const NEW_GADGETS: readonly (keyof Widgets)[] = ['analogClock', 'slideshow', 'news', 'currency']
 
+/** Aqua: the friendly, glossy side-tab look (default). Modern: Vista glass with tabs on top. */
+export const UI_STYLES = ['aqua', 'modern'] as const
+export type UiStyle = (typeof UI_STYLES)[number]
+
 export interface Settings {
+  uiStyle: UiStyle
+  /** Aqua: the tab sidebar shrunk to icons */
+  sidebarCompact: boolean
   startup: 'restore' | 'newtab' | 'home'
   homePage: string
   searchEngine: SearchEngineId
@@ -194,6 +201,8 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  uiStyle: 'aqua',
+  sidebarCompact: false,
   startup: 'restore',
   homePage: 'auralis://newtab',
   searchEngine: 'bing',
@@ -284,6 +293,8 @@ export function sanitizeSettings(input: unknown, base: Settings = DEFAULT_SETTIN
   const homePage = str(s.homePage, 2048, d.homePage)
   const customWallpapers = sanitizeCustomWallpapers(s.customWallpapers, d.customWallpapers)
   return {
+    uiStyle: oneOf(s.uiStyle, UI_STYLES, d.uiStyle),
+    sidebarCompact: bool(s.sidebarCompact, d.sidebarCompact),
     startup: oneOf(s.startup, ['restore', 'newtab', 'home'] as const, d.startup),
     homePage: isSafeHomePage(homePage) ? homePage : d.homePage,
     searchEngine: oneOf(s.searchEngine, Object.keys(SEARCH_ENGINES) as SearchEngineId[], d.searchEngine),

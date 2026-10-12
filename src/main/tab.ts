@@ -162,7 +162,7 @@ export class Tab {
     const opened = (createOptions as { webContents?: WebContents } | undefined)?.webContents
     const view = new WebContentsView(opened ? { webContents: opened, webPreferences: prefs } : { webPreferences: prefs })
     view.setBackgroundColor('#ffffffff')
-    view.setBorderRadius(0)
+    view.setBorderRadius(settings.get().uiStyle === 'aqua' ? 12 : 0)
     this.view = view
     this.started = !!opened
     this.wire(view.webContents)

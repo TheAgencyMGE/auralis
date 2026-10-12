@@ -8,6 +8,7 @@ import { Icon } from './icons'
 import { weatherInfo } from './weather'
 import { parseFeed, type Feed } from './feed'
 import './gadgets.css'
+import './gadgets-aqua.css'
 
 /** Every gadget, in Sidebar order, with its label for the gadget list. */
 export const GADGETS: { key: keyof Widgets; label: string; sidebar: boolean }[] = [

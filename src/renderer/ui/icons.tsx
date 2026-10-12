@@ -80,8 +80,8 @@ export function Icon({ name, size = 16, className, style, title }: { name: strin
   )
 }
 
-/** Site icon: the page's favicon, or Fluent's 3D globe. */
+/** Site icon: the page's favicon, or Oxygen's web globe. */
 export function Favicon({ src, size = 16, dim = false }: { src: string | null | undefined; size?: number; dim?: boolean }) {
-  const url = src && src !== 'page' ? src : '/emoji/globe.webp'
+  const url = src && src !== 'page' ? src : '/art/icons/web-32.png'
   return <img className={`favicon${dim ? ' is-dim' : ''}`} src={url} width={size} height={size} alt="" draggable={false} />
 }

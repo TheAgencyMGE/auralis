@@ -45,7 +45,7 @@ try {
     shot('omnibox')
     await chrome.keyboard.press('Escape')
     await chrome.keyboard.press('Escape')
-    await chrome.click('.orb-button')
+    await chrome.click('.aq-orb, .orb-button')
     await wait(800)
     shot('appmenu')
     await overlay.keyboard.press('Escape')
@@ -134,7 +134,7 @@ try {
     shot('r1-ntp')
     await W(() => { const a = globalThis.__auralis; const w = [...a.BrowserWin.all.values()][0]; w.activeTab.navigate('https://en.wikipedia.org/wiki/Frutiger_Aero') })
     await wait(3500)
-    await chrome.click('.orb-button')
+    await chrome.click('.aq-orb, .orb-button')
     await wait(900)
     shot('r2-menu')
     await overlay.keyboard.press('Escape')
@@ -261,6 +261,45 @@ try {
     shot('m11-basic')
     await W(() => globalThis.__auralis.settings.set({ transparency: true }))
     server.close()
+  }
+  if (scenario === 'aqua') {
+    const W = (fn, arg) => app.evaluate(fn, arg)
+    const win = () => [...globalThis.__auralis.BrowserWin.all.values()][0]
+    await W(() => globalThis.__auralis.settings.set({ wallpaper: 'live:fields', weatherLocation: { name: 'Honolulu, Hawaii, United States', lat: 21.3, lon: -157.85 } }))
+    // Visit a few sites so the new tab page has channels.
+    for (const u of ['https://en.wikipedia.org/wiki/Frutiger_Aero?banner=none', 'https://www.bbc.com/news', 'https://developer.mozilla.org/en-US/', 'https://github.com/']) {
+      await W((_e, u) => [...globalThis.__auralis.BrowserWin.all.values()][0].activeTab.navigate(u), u)
+      await wait(2500)
+    }
+    await W(() => {
+      const w = [...globalThis.__auralis.BrowserWin.all.values()][0]
+      for (const u of ['https://en.wikipedia.org/wiki/Windows_Vista?banner=none', 'https://en.wikipedia.org/wiki/Wii?banner=none', 'https://www.youtube.com/']) w.createTab({ url: u }, { activate: false })
+      const pinned = w.createTab({ url: 'https://en.wikipedia.org/wiki/Dolphin?banner=none' }, { activate: false })
+      w.setPinned(pinned, true)
+      w.activeTab.navigate('auralis://newtab/')
+    })
+    await wait(4000)
+    shot('aq1-ntp')
+    await W(() => { const w = [...globalThis.__auralis.BrowserWin.all.values()][0]; w.activate(w.tabs.find((t) => t.url.includes('Windows_Vista'))) })
+    await W(() => globalThis.__auralis.settings.set({ sidebar: true, widgets: { analogClock: true, weather: true, slideshow: true, currency: true, aquarium: true, notes: true, news: false } }))
+    await wait(4000)
+    shot('aq2-page-gadgets')
+    await chrome.evaluate(() => document.querySelector('.side-scroll')?.scrollTo(0, 2000))
+    await wait(800)
+    shot('aq3-gadgets-lower')
+    await W(() => globalThis.__auralis.settings.set({ sidebar: false }))
+    await chrome.click('.aq-orb')
+    await wait(1000)
+    shot('aq4-menu')
+    await overlay.keyboard.press('Escape')
+    await W(() => [...globalThis.__auralis.BrowserWin.all.values()][0].activeTab.navigate('auralis://settings/'))
+    await wait(2000)
+    shot('aq5-settings')
+    await W(() => globalThis.__auralis.settings.set({ sidebarCompact: true }))
+    await W(() => [...globalThis.__auralis.BrowserWin.all.values()][0].activeTab.navigate('auralis://newtab/'))
+    await wait(2500)
+    shot('aq6-compact')
+    void win
   }
 } catch (err) {
   console.error(err)

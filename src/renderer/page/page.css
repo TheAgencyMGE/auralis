@@ -1714,3 +1714,49 @@ html:not([data-page='newtab']):not([data-page='reader']):not([data-page='welcome
   font-size: var(--fs-xs);
   line-height: 1.4;
 }
+
+/* ---- the Look chooser: two little drawings of the window ---------------------------- */
+
+.looks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 260px));
+  gap: 14px;
+}
+.look-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 10px 12px;
+  border: 2px solid #cfdbe6;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  font-family: var(--font);
+}
+.look-card:hover {
+  border-color: #8fd0fb;
+}
+.look-card.is-on {
+  border-color: #39b8ff;
+  box-shadow: 0 0 0 4px rgba(57, 184, 255, 0.25);
+}
+.look-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1282 / 821;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(30, 70, 110, 0.18);
+}
+.look-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+.look-blurb {
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}

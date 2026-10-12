@@ -35,7 +35,7 @@ function PrivateTab() {
       <div className="ntp-shade" />
       <main className="ntp-main">
         <div className="private-card">
-          <img className="private-art" src="/emoji/detective.webp" width={64} height={64} alt="" />
+          <img className="private-art" src="/art/icons/private.webp" width={64} height={64} alt="" />
           <h1>You’re browsing InPrivate</h1>
           <p>When you close every InPrivate window, Auralis forgets the pages you visited, cookies, site data and anything you typed into forms in this window.</p>
           <p>Files you download and favorites you add are kept. Your internet provider, employer or school, and the sites you visit, can still see what you do.</p>
@@ -135,11 +135,11 @@ function SearchBox({ engine }: { engine: string }) {
 }
 
 function TopSites({ sites, onRemove }: { sites: Site[]; onRemove: (host: string) => void }) {
-  if (!sites.length) {
-    return <p className="ntp-empty">The sites you visit most will gather here.</p>
-  }
+  // Aqua shows empty channel slots, like the Wii menu; Modern hides them.
+  const empty = Array.from({ length: Math.max(0, 8 - sites.length) }, (_, i) => <span key={`empty-${i}`} className="tile tile-empty" aria-hidden />)
   return (
-    <nav className="tiles" aria-label="Frequently visited">
+    <nav className={`tiles${sites.length ? '' : ' is-empty'}`} aria-label="Frequently visited">
+      {!sites.length && <p className="ntp-empty">The sites you visit most will gather here.</p>}
       {sites.map((site) => (
         <a
           key={site.url}
@@ -176,6 +176,7 @@ function TopSites({ sites, onRemove }: { sites: Site[]; onRemove: (host: string)
           </button>
         </a>
       ))}
+      {empty}
     </nav>
   )
 }

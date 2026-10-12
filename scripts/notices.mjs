@@ -9,7 +9,7 @@ const nm = path.join(root, 'node_modules')
 
 /** Libraries compiled into out/ by Vite (not present as node_modules in the app).
  *  qrcode's yargs dependency serves only its CLI and is not in the bundle. */
-const BUNDLED = ['react', 'react-dom', 'scheduler', 'qrcode', 'qrcode/node_modules/pngjs', 'dijkstrajs', '@mozilla/readability']
+const BUNDLED = ['react', 'react-dom', 'scheduler', 'qrcode', 'qrcode/node_modules/pngjs', 'dijkstrajs', '@mozilla/readability', '@fontsource/m-plus-rounded-1c', '@fontsource/vt323']
 
 /** The closure of `dependencies` (not peers, not dev) starting from the
  *  app's own dependencies: exactly what electron-builder copies into the app. */
@@ -110,9 +110,12 @@ as stock footage.
 
 - Interface icons: Fluent UI System Icons, Copyright (c) 2020 Microsoft
   Corporation, MIT License — https://github.com/microsoft/fluentui-system-icons
-- 3D artwork (globe logo and app icon, folder, weather, page headers): Fluent
-  Emoji, Copyright (c) Microsoft Corporation, MIT License —
-  https://github.com/microsoft/fluentui-emoji
+- Illustrated icons (weather, folder, page headers, Welcome Center): Oxygen
+  icon theme, Copyright (c) the Oxygen Team / KDE, LGPL-3.0-or-later —
+  https://github.com/KDE/oxygen-icons
+- The Auralis orb logo and app icon are original to Auralis.
+- Fonts: M PLUS Rounded 1c (the Aqua look) and VT323 (gadget LCD readouts),
+  both SIL Open Font License 1.1, bundled through Fontsource.
 - Sounds: Interface Sounds by Kenney (www.kenney.nl), CC0 1.0 —
   https://kenney.nl/assets/interface-sounds
 - Startup sound: "Wind chime small" by freesound_community, Pixabay Content

@@ -354,3 +354,15 @@ select.field {
   background: linear-gradient(180deg, #c3dfbb, #a9cf9e);
   text-shadow: none;
 }
+
+/* The Auralis orb (inline SVG) fills whatever box it's given. */
+.orb-mark {
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+}
+.orb-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

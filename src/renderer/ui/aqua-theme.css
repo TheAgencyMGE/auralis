@@ -1,0 +1,117 @@
+/* M PLUS Rounded 1c (SIL OFL 1.1): the friendly rounded face of the Aqua look.
+   Only the Latin subset ships. */
+@import '@fontsource/m-plus-rounded-1c/latin-400.css';
+@import '@fontsource/m-plus-rounded-1c/latin-500.css';
+@import '@fontsource/m-plus-rounded-1c/latin-700.css';
+@import '@fontsource/m-plus-rounded-1c/latin-800.css';
+
+:root[data-ui='aqua'] {
+  --font: 'M PLUS Rounded 1c', 'Segoe UI', system-ui, sans-serif;
+  --font-light: 'M PLUS Rounded 1c', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* =====================================================================
+   Aqua controls, shared by the window, its popups and Auralis' pages.
+   Gel capsules, rounded fields, soft white popups, pill selections.
+   ===================================================================== */
+
+:root[data-ui='aqua'] {
+  --ink: #2c3a49;
+  --ink-soft: #5d7084;
+  --ink-faint: #8a9aab;
+  --heading: #1170cf;
+  --link: #0f78dc;
+  --link-hover: #19a0ff;
+  --popup-radius: 16px;
+  --popup-edge: rgba(90, 140, 190, 0.45);
+  --popup-bg: linear-gradient(180deg, #ffffff 0%, #f6fbff 100%);
+  --popup-shadow: 0 14px 36px rgba(20, 60, 110, 0.28), 0 2px 8px rgba(20, 60, 110, 0.14);
+  --sel-hover-bg: linear-gradient(180deg, #f2fbff 0%, #dcf2ff 100%);
+  --sel-hover-edge: #a8dcfb;
+  --sel-bg: linear-gradient(180deg, #e3f5ff 0%, #bfe6ff 100%);
+  --sel-edge: #39b8ff;
+}
+
+:root[data-ui='aqua'] .sel {
+  border-radius: 10px;
+}
+
+/* Push buttons become pearl capsules; the default one is candy-blue gel. */
+:root[data-ui='aqua'] .btn {
+  height: 30px;
+  min-width: 84px;
+  padding: 0 16px;
+  border: 1px solid #b4c7d8;
+  border-radius: 15px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 48%, #e6eff6 52%, #f1f6fa 100%);
+  box-shadow:
+    0 1px 3px rgba(20, 60, 100, 0.15),
+    inset 0 1px 0 #fff;
+  color: var(--ink);
+  font-family: var(--font);
+  font-weight: 500;
+}
+:root[data-ui='aqua'] .btn:hover:not(:disabled) {
+  border-color: #39b8ff;
+  background: linear-gradient(180deg, #ffffff 0%, #eef9ff 48%, #d6f0ff 52%, #e8f7ff 100%);
+  box-shadow: 0 0 0 3px rgba(57, 184, 255, 0.25);
+}
+:root[data-ui='aqua'] .btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+:root[data-ui='aqua'] .btn.is-default {
+  border-color: #0a5fb6;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 40, 100, 0.6);
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.3) 44%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(90% 60% at 50% 100%, rgba(150, 235, 255, 0.8) 0%, rgba(150, 235, 255, 0) 70%),
+    linear-gradient(180deg, #4fbaff 0%, #1d8ff0 52%, #0c6fd8 100%);
+  box-shadow: 0 2px 5px rgba(0, 60, 140, 0.3);
+}
+:root[data-ui='aqua'] .btn.is-default:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 3px rgba(57, 184, 255, 0.35);
+}
+:root[data-ui='aqua'] .btn:disabled {
+  opacity: 0.55;
+}
+:root[data-ui='aqua'] .btn.is-danger:hover:not(:disabled) {
+  border-color: #e0533c;
+  box-shadow: 0 0 0 3px rgba(255, 110, 80, 0.25);
+}
+
+:root[data-ui='aqua'] .field {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #b6cde2;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f1f7fc 0%, #ffffff 40%);
+  box-shadow: inset 0 2px 3px rgba(30, 70, 110, 0.1);
+  font-family: var(--font);
+}
+:root[data-ui='aqua'] .field:focus {
+  border-color: #39b8ff;
+  box-shadow:
+    0 0 0 3px rgba(57, 184, 255, 0.3),
+    inset 0 2px 3px rgba(30, 70, 110, 0.08);
+}
+
+/* Toggles: a candy-blue gel when on. */
+:root[data-ui='aqua'] .toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border-color: #b6cde2;
+  background: linear-gradient(180deg, #dfe8f0, #f4f8fb);
+}
+:root[data-ui='aqua'] .toggle::after {
+  width: 20px;
+  height: 20px;
+}
+:root[data-ui='aqua'] .toggle:checked {
+  border-color: #0a5fb6;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.25) 44%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(180deg, #4fbaff 0%, #1d8ff0 52%, #0c6fd8 100%);
+}

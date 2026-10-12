@@ -7,7 +7,8 @@ import { Group, Row, Shell } from '../Shell'
 const set = (patch: Partial<Settings>) => void call('settings.set', patch)
 
 const SECTIONS = [
-  { id: 'appearance', label: 'Appearance', icon: 'sun' },
+  { id: 'look', label: 'Look', icon: 'sun' },
+  { id: 'appearance', label: 'Appearance', icon: 'image' },
   { id: 'startup', label: 'Startup and home', icon: 'home' },
   { id: 'search', label: 'Search', icon: 'search' },
   { id: 'privacy', label: 'Privacy and Shield', icon: 'shield' },
@@ -52,6 +53,23 @@ export default function SettingsPage() {
 
 function Appearance({ s }: { s: Settings }) {
   return (
+    <>
+    <Group id="look" title="Look" intro="Choose how Auralis looks. You can switch any time.">
+      <div className="looks" role="radiogroup" aria-label="Look">
+        {(
+          [
+            ['aqua', 'Aqua', 'Friendly and glossy: tabs down the side, gel buttons, rounded everything.'],
+            ['modern', 'Modern', 'Vista glass: tabs along the top, a classic toolbar and status bar.']
+          ] as const
+        ).map(([id, name, blurb]) => (
+          <button key={id} role="radio" aria-checked={s.uiStyle === id} className={`look-card look-${id}${s.uiStyle === id ? ' is-on' : ''}`} onClick={() => set({ uiStyle: id })}>
+            <img className="look-preview" src={`/art/looks/${id}.webp`} alt="" />
+            <span className="look-name">{name}</span>
+            <span className="look-blurb">{blurb}</span>
+          </button>
+        ))}
+      </div>
+    </Group>
     <Group id="appearance" title="Window color and appearance" intro="Pick the color of the glass. It tints the frame, menus and previews.">
       <div className="colors" role="radiogroup" aria-label="Window color">
         {(Object.keys(FRAME_COLORS) as FrameColorId[]).map((id) => (
@@ -89,7 +107,7 @@ function Appearance({ s }: { s: Settings }) {
       <Row label="Startup sound" help="A wind chime when Auralis starts." htmlFor="startsound">
         <input id="startsound" type="checkbox" className="toggle" checked={s.startupSound} onChange={(e) => set({ startupSound: e.target.checked })} />
       </Row>
-      <Row label="Startup splash" help="The globe fades in on the glass for a moment when Auralis starts." htmlFor="splash">
+      <Row label="Startup splash" help="The Auralis orb fades in on the glass for a moment when Auralis starts." htmlFor="splash">
         <input id="splash" type="checkbox" className="toggle" checked={s.splash} onChange={(e) => set({ splash: e.target.checked })} />
       </Row>
       <Row label="Busy pointer while pages load" help="The Aero “working in background” pointer shows until the page has loaded." htmlFor="busy">
@@ -102,6 +120,7 @@ function Appearance({ s }: { s: Settings }) {
         <input id="previews" type="checkbox" className="toggle" checked={s.tabPreviews} onChange={(e) => set({ tabPreviews: e.target.checked })} />
       </Row>
     </Group>
+    </>
   )
 }
 

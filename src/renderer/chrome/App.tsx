@@ -11,6 +11,7 @@ import { playSound, type SoundName } from '@ui/sound'
 import { TabStrip } from './Tabs'
 import { Toolbar } from './Toolbar'
 import { CaptionButtons, FavoritesBar, FindBar, InfoBarRow, StatusBar, ViewportFurniture } from './Bars'
+import { AquaFrame } from './Aqua'
 
 // Gadget code loads the first time the Sidebar opens, not with every window.
 const SidePanel = lazy(() => import('./Sidebar').then((m) => ({ default: m.SidePanel })))
@@ -62,12 +63,13 @@ export function App() {
       ro.disconnect()
       window.removeEventListener('resize', reportLayout)
     }
-  }, [reportLayout])
+    // Switching looks swaps the viewport element itself.
+  }, [reportLayout, settings.uiStyle])
 
   // Rows appearing or disappearing move the viewport without resizing it.
   useLayoutEffect(() => {
     reportLayout()
-  }, [reportLayout, settings.showBookmarksBar, settings.showStatusBar, settings.sidebar, state?.infobar?.id, state?.find.open, state?.maximized, state?.fullscreen, state?.htmlFullscreen])
+  }, [reportLayout, settings.uiStyle, settings.sidebarCompact, settings.showBookmarksBar, settings.showStatusBar, settings.sidebar, state?.infobar?.id, state?.find.open, state?.maximized, state?.fullscreen, state?.htmlFullscreen])
 
   const setAnchor = useCallback((key: string) => (el: HTMLElement | null) => {
     anchorRefs.current[key] = el
@@ -75,6 +77,16 @@ export function App() {
 
   const active = state?.tabs.find((t) => t.id === state.activeTabId) ?? null
   const immersive = !!state && (state.fullscreen || state.htmlFullscreen)
+  const sidePanel = !immersive && settings.sidebar && (
+    <Suspense fallback={<aside className="side-panel" />}>
+      <SidePanel settings={settings} />
+    </Suspense>
+  )
+
+  if (settings.uiStyle === 'aqua') {
+    return <AquaFrame state={state} settings={settings} active={active} immersive={immersive} viewportRef={viewportRef} setAnchor={setAnchor} sidePanel={sidePanel} />
+  }
+
   const cls = [
     'frame',
     state?.maximized ? 'is-maximized' : '',
@@ -105,11 +117,7 @@ export function App() {
         <main className="viewport" ref={viewportRef}>
           <ViewportFurniture state={state} active={active} viewportRef={viewportRef} />
         </main>
-        {!immersive && settings.sidebar && (
-          <Suspense fallback={<aside className="side-panel" />}>
-            <SidePanel settings={settings} />
-          </Suspense>
-        )}
+        {sidePanel}
       </div>
       {!immersive && settings.showStatusBar && <StatusBar state={state} active={active} />}
     </div>

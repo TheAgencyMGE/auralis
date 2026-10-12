@@ -76,7 +76,7 @@ export default function ErrorPage() {
   return (
     <div className="errp">
       <div className="errp-head">
-        <img className="errp-art" src={`/emoji/${e.warn ? 'warning' : 'globe'}.webp`} alt="" />
+        <img className="errp-art" src={`/art/icons/${e.warn ? 'warning' : 'web'}.webp`} alt="" />
         <div>
           <h1>{e.title}</h1>
           <p className="errp-lede">{e.lede}</p>
@@ -138,7 +138,7 @@ function UnsafeSite({ info }: { info: Info }) {
   return (
     <div className="unsafe">
       <div className="unsafe-card">
-        <img className="unsafe-art" src="/emoji/shield.webp" width={72} height={72} alt="" />
+        <img className="unsafe-art" src="/art/icons/unsafe.webp" width={72} height={72} alt="" />
         <div>
           <h1>This website has been reported as unsafe</h1>
           <p className="unsafe-host">{h}</p>

@@ -13,6 +13,7 @@ import { NEW_TAB_URL, SCHEME, internalPage } from '../shared/url'
 import type { InfoBar, MenuItem, OverlayContent, OverlayRequest, Rect, Space, SpaceColor, SplitState, WindowState } from '../shared/types'
 import { logger } from './log'
 import { BAR_ID } from './data/bookmarks'
+import type { Settings } from '../shared/settings'
 import { downloadAction, downloadsSummary } from './downloads'
 import { actionsFor, selectedTab, trackTab } from './extensions'
 
@@ -20,6 +21,16 @@ const log = logger('window')
 
 /** Vista's Aero Basic frame: an opaque pale blue, the same for every colour scheme. */
 export const BASIC_FRAME = '#c5d6ec'
+/** Aqua's pearl-white plastic: opaque, the same on any desktop. */
+export const AQUA_FRAME = '#eaf3fb'
+
+function frameLook(s: Settings): { material: 'acrylic' | 'none'; color: string } {
+  if (s.uiStyle === 'aqua') return { material: 'none', color: AQUA_FRAME }
+  return s.transparency ? { material: 'acrylic', color: '#00000000' } : { material: 'none', color: BASIC_FRAME }
+}
+
+/** Aqua shows the page on a rounded screen; Modern keeps square corners. */
+export const viewRadius = () => (settings.get().uiStyle === 'aqua' ? 12 : 0)
 
 export interface MenuSpec {
   label?: string
@@ -139,8 +150,8 @@ export class BrowserWin implements TabHost {
       show: false,
       frame: false,
       title: this.incognito ? 'Auralis — InPrivate' : 'Auralis',
-      backgroundColor: s.transparency ? '#00000000' : BASIC_FRAME,
-      backgroundMaterial: s.transparency ? 'acrylic' : 'none',
+      backgroundColor: frameLook(s).color,
+      backgroundMaterial: frameLook(s).material,
       roundedCorners: true,
       icon: path.join(app.getAppPath(), 'build', 'icon.ico'),
       webPreferences: {
@@ -202,10 +213,12 @@ export class BrowserWin implements TabHost {
     })
     this.win.on('resize', () => this.overlay.relayout())
     const offSettings = settings.onChange((next, prev) => {
-      if (next.transparency !== prev.transparency || next.frameColor !== prev.frameColor) {
-        this.win.setBackgroundMaterial(next.transparency ? 'acrylic' : 'none')
-        this.win.setBackgroundColor(next.transparency ? '#00000000' : BASIC_FRAME)
+      if (next.transparency !== prev.transparency || next.frameColor !== prev.frameColor || next.uiStyle !== prev.uiStyle) {
+        const look = frameLook(next)
+        this.win.setBackgroundMaterial(look.material)
+        this.win.setBackgroundColor(look.color)
       }
+      if (next.uiStyle !== prev.uiStyle) for (const t of this.tabs) t.view?.setBorderRadius(viewRadius())
       if (next.busyCursor !== prev.busyCursor) this.pushState()
     })
     this.win.once('closed', offSettings)
@@ -312,9 +325,10 @@ export class BrowserWin implements TabHost {
     else tab.wc.focus()
   }
 
-  focusOmnibox(selectAll = true): void {
+  /** `reveal`: the user asked for the address bar (Ctrl+L), so a compact sidebar opens up. */
+  focusOmnibox(selectAll = true, reveal = false): void {
     this.chrome.focus()
-    this.send('omnibox.focus', { selectAll })
+    this.send('omnibox.focus', { selectAll, reveal })
   }
 
   closeTab(tab: Tab): void {

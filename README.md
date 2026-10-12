@@ -14,6 +14,8 @@ npm run dist         # typecheck, test, build, NSIS installer -> dist/
 
 ## Highlights
 
+- Two looks. **Aqua** (the default) is friendly and glossy: tabs down the side like Zen, pinned tabs as Wii-style channels, candy-blue gel buttons, a rounded typeface, a Wii-menu clock bar and the page on a rounded screen. **Modern** keeps the Vista glass frame with tabs on top. Switch in Settings → Look.
+
 - Real acrylic glass frame with Vista window colors, IE-style navigation orbs and a Start-menu app menu.
 - Tabs with Spaces, split view, hover previews, Tab Flip, tear-off, and sleeping tabs that keep their history.
 - Shield: ad and tracker blocking (Ghostery engine), HTTPS-First, Global Privacy Control, per-site permissions, and a screen-sharing picker.

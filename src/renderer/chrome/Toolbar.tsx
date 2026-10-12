@@ -80,7 +80,7 @@ export function Toolbar({ state, active, settings, setAnchor }: { state: WindowS
   )
 }
 
-function ProgressRing({ value }: { value: number }) {
+export function ProgressRing({ value }: { value: number }) {
   const r = 12
   const c = 2 * Math.PI * r
   const indeterminate = value < 0
@@ -120,7 +120,7 @@ function NavOrbs({ active }: { active: TabState | null }) {
   )
 }
 
-function ShieldButton({ active, settings }: { active: TabState | null; settings: Settings }) {
+export function ShieldButton({ active, settings }: { active: TabState | null; settings: Settings }) {
   const on = !!active?.shieldActive
   const web = !!active && /^https?:/.test(active.url)
   const label = !settings.shieldEnabled
@@ -191,7 +191,19 @@ function SiteChip({ tab, anchorRef }: { tab: TabState | null; anchorRef: (el: HT
   )
 }
 
-function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: SetAnchor }) {
+export function Omnibox({
+  active,
+  setAnchor,
+  compact = false,
+  minDropWidth = 0
+}: {
+  active: TabState | null
+  setAnchor: SetAnchor
+  /** Aqua: refresh and zoom live elsewhere */
+  compact?: boolean
+  /** the suggestion list may be wider than the field itself */
+  minDropWidth?: number
+}) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [focused, setFocused] = useState(false)
   const [value, setValue] = useState('')
@@ -228,7 +240,10 @@ function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: Se
     []
   )
 
-  const anchorRect = () => rectOf(inputRef.current?.closest('.omnibox') ?? null)
+  const anchorRect = () => {
+    const r = rectOf(inputRef.current?.closest('.omnibox') ?? null)
+    return { ...r, width: Math.max(r.width, minDropWidth) }
+  }
 
   const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const el = e.target
@@ -353,7 +368,7 @@ function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: Se
           <Icon name="reader" />
         </button>
       )}
-      {active && Math.abs(active.zoom - 1) > 0.001 && (
+      {!compact && active && Math.abs(active.zoom - 1) > 0.001 && (
         <button className="zoom-chip" title="Zoom" onClick={(e) => void call('menu.zoom', rectOf(e.currentTarget))}>
           {Math.round(active.zoom * 100)}%
         </button>
@@ -369,7 +384,8 @@ function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: Se
           <Icon name={active.bookmarked ? 'star-filled' : 'star'} />
         </button>
       )}
-      <span className="field-divider" />
+      {!compact && <span className="field-divider" />}
+      {!compact && (
       <button
         className="field-btn reload-btn"
         title={active?.loading ? 'Stop (Esc)' : 'Refresh (F5)'}
@@ -378,6 +394,7 @@ function Omnibox({ active, setAnchor }: { active: TabState | null; setAnchor: Se
       >
         <Icon name={active?.loading ? 'stop' : 'reload'} size={active?.loading ? 13 : 15} />
       </button>
+      )}
     </div>
   )
 }

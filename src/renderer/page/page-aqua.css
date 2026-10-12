@@ -1,0 +1,186 @@
+/* =====================================================================
+   Aqua pages. The new tab page's frequent sites become Wii channels:
+   rounded white tiles with a grey edge that glow blue when pointed at,
+   empty slots waiting below. Control Panel pages become rounded white
+   cards on pearl with pill navigation.
+   ===================================================================== */
+
+/* ---- new tab ------------------------------------------------------------ */
+
+:root[data-ui='aqua'] .ntp-time {
+  font-weight: 700;
+  letter-spacing: 0;
+}
+:root[data-ui='aqua'] .ntp-date {
+  font-weight: 500;
+}
+:root[data-ui='aqua'] .ntp-search {
+  height: 54px;
+  border-radius: 27px;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+}
+:root[data-ui='aqua'] .ntp-search input {
+  font-family: var(--font);
+}
+
+:root[data-ui='aqua'] .tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 152px);
+  gap: 14px;
+  max-width: none;
+  margin-top: 38px;
+}
+:root[data-ui='aqua'] .tile {
+  width: auto;
+  height: 104px;
+  gap: 6px;
+  padding: 14px 8px 10px;
+  justify-content: center;
+  border: 2px solid #c6d2dd;
+  border-radius: 18px;
+  color: #3b4b5c;
+  text-shadow: none;
+  background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 48%, #eaf1f7 52%, #f4f8fb 100%);
+  box-shadow:
+    0 4px 12px rgba(10, 40, 80, 0.25),
+    inset 0 1px 0 #fff;
+  transition:
+    transform 160ms var(--ease-glass),
+    box-shadow 160ms,
+    border-color 160ms;
+}
+:root[data-ui='aqua'] .tile:hover,
+:root[data-ui='aqua'] .tile:focus-visible {
+  border-color: #39b8ff;
+  background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 48%, #eaf1f7 52%, #f4f8fb 100%);
+  box-shadow:
+    0 0 0 4px rgba(57, 184, 255, 0.45),
+    0 8px 18px rgba(10, 60, 130, 0.3);
+  transform: translateY(-2px) scale(1.03);
+}
+:root[data-ui='aqua'] .tile-jewel {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+  -webkit-box-reflect: unset;
+}
+:root[data-ui='aqua'] .tile-jewel .favicon {
+  width: 32px;
+  height: 32px;
+}
+:root[data-ui='aqua'] .tile-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a5a6a;
+  text-shadow: none;
+}
+:root[data-ui='aqua'] .tile-remove {
+  border-radius: 50%;
+  border-color: #c6d2dd;
+  background: #fff;
+  color: #6b7c8d;
+}
+/* empty channel slots */
+.tile-empty {
+  display: none;
+}
+:root[data-ui='aqua'] .tile-empty {
+  display: block;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 2px 6px rgba(10, 40, 80, 0.12);
+  pointer-events: none;
+}
+:root[data-ui='aqua'] .tiles .ntp-empty {
+  grid-column: 1 / -1;
+  margin: 0 0 4px;
+  text-align: center;
+}
+:root[data-ui='aqua'] .ntp-chip {
+  height: 32px;
+  padding: 0 14px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  font-family: var(--font);
+  font-weight: 700;
+}
+:root[data-ui='aqua'] .ntp-panel {
+  border-radius: 20px;
+  font-family: var(--font);
+}
+:root[data-ui='aqua'] .wp-thumb,
+:root[data-ui='aqua'] .wp-thumb img {
+  border-radius: 12px;
+}
+
+/* ---- Control Panel pages ----------------------------------------------------- */
+
+:root[data-ui='aqua']:not([data-page='newtab']):not([data-page='reader']):not([data-unsafe]) body {
+  background:
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0 1px, rgba(255, 255, 255, 0) 1px 4px),
+    linear-gradient(180deg, #d8eefd 0%, #eef7fd 240px, #f5f9fd 100%);
+}
+:root[data-ui='aqua'] .cp-pane {
+  margin: 14px 0 14px 14px;
+  height: calc(100vh - 28px);
+  top: 14px;
+  border: 1px solid #cfdbe6;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8fc 100%);
+  box-shadow: 0 6px 20px rgba(20, 60, 110, 0.12);
+}
+:root[data-ui='aqua'] .cp-brand {
+  font-weight: 800;
+  color: #1170cf;
+}
+:root[data-ui='aqua'] .cp-nav a,
+:root[data-ui='aqua'] .cp-nav button {
+  height: 34px;
+  border-radius: 17px;
+  font-weight: 500;
+  font-size: 13px;
+}
+:root[data-ui='aqua'] .cp-nav a.is-on {
+  border-color: #0a5fb6;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.25) 44%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(180deg, #4fbaff 0%, #1d8ff0 52%, #0c6fd8 100%);
+}
+:root[data-ui='aqua'] .cp-main {
+  padding: 26px 34px 60px 30px;
+}
+:root[data-ui='aqua'] .cp-head h1 {
+  font-weight: 800;
+  font-size: 26px;
+}
+:root[data-ui='aqua'] .cp-group {
+  padding: 18px 22px 16px;
+  border: 1px solid #d6e2ec;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(20, 60, 110, 0.08);
+}
+:root[data-ui='aqua'] .cp-group > h2 {
+  font-weight: 800;
+  font-size: 16px;
+}
+:root[data-ui='aqua'] .row {
+  border-radius: 12px;
+}
+
+/* Welcome Center and the feed view take the same friendly shapes. */
+:root[data-ui='aqua'] .wc-head,
+:root[data-ui='aqua'] .wc-detail,
+:root[data-ui='aqua'] .fv-about {
+  border-radius: 22px;
+}
+:root[data-ui='aqua'] .wc-tile {
+  border-radius: 16px;
+  font-weight: 500;
+}
+:root[data-ui='aqua'] .wc-head h1,
+:root[data-ui='aqua'] .fv-head h1 {
+  font-weight: 800;
+}

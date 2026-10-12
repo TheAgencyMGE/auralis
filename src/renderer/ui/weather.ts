@@ -1,6 +1,6 @@
-// WMO weather codes (as returned by Open-Meteo) → label and Fluent Emoji 3D art.
+// WMO weather codes (as returned by Open-Meteo) → label and Oxygen weather art.
 export function weatherInfo(code: number, day = true): { label: string; art: string } {
-  const art = (name: string) => `/emoji/${name}.webp`
+  const art = (name: string) => `/art/icons/${name}.webp`
   if (code === 0) return { label: day ? 'Clear and sunny' : 'Clear', art: art(day ? 'sun' : 'moon') }
   if (code === 1) return { label: 'Mostly clear', art: art(day ? 'sun-small-cloud' : 'moon') }
   if (code === 2) return { label: 'Partly cloudy', art: art(day ? 'sun-cloud' : 'cloud') }

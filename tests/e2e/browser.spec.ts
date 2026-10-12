@@ -20,15 +20,15 @@ test('starts with a new tab page and the chrome', async () => {
   h = await launch()
   const ntp = await h.page('auralis://newtab')
   await expect(ntp.locator('.ntp-search input')).toBeVisible()
-  await expect(h.chrome.locator('.tab')).toHaveCount(1)
-  await expect(h.chrome.locator('.tab-title')).toHaveText('New Tab')
+  await expect(h.chrome.locator(':is(.tab, .aq-tab)')).toHaveCount(1)
+  await expect(h.chrome.locator(':is(.tab-title, .aq-tab-title)')).toHaveText('New Tab')
 })
 
 test('navigates from the omnibox, records history and updates the tab', async () => {
   h = await launch()
   await omniboxGo(h, server.url('/a'))
   await until(h.state, (s) => s.tabs[0].title === 'Page A')
-  await expect(h.chrome.locator('.tab-title')).toHaveText('Page A')
+  await expect(h.chrome.locator(':is(.tab-title, .aq-tab-title)')).toHaveText('Page A')
   // Unfocused, the omnibox shows the URL without the scheme for http? No: http stays visible.
   await expect(h.chrome.locator('.omnibox-input')).toHaveValue(/127\.0\.0\.1/)
   const history = await h.app.evaluate(() => (globalThis as any).__auralis.ctx.history.search('Page A'))
@@ -42,10 +42,10 @@ test('back and forward work and the orbs reflect history', async () => {
   const tab = await h.page(server.url('/a'))
   await tab.click('#tob')
   await until(h.state, (s) => s.tabs[0].title === 'Page B')
-  await expect(h.chrome.locator('.nav-orb.is-back')).toBeEnabled()
-  await h.chrome.click('.nav-orb.is-back')
+  await expect(h.chrome.locator('button[aria-label="Back"]')).toBeEnabled()
+  await h.chrome.click('button[aria-label="Back"]')
   await until(h.state, (s) => s.tabs[0].title === 'Page A')
-  await expect(h.chrome.locator('.nav-orb.is-forward')).toBeEnabled()
+  await expect(h.chrome.locator('button[aria-label="Forward"]')).toBeEnabled()
 })
 
 test('keyboard shortcuts open, close and reopen tabs', async () => {
@@ -102,10 +102,10 @@ test('favorites: Ctrl+D stars the page and it appears on the bar', async () => {
   await until(h.state, (s) => s.tabs[0].title === 'Page B')
   await h.press('tab', 'D', ['control'])
   await until(h.state, (s) => s.overlay === 'bookmark')
-  await expect(h.chrome.locator('.fav-item', { hasText: 'Page B' })).toBeVisible()
+  await expect(h.chrome.locator(':is(.fav-item, .aq-fav)', { hasText: 'Page B' })).toBeVisible()
   await expect(h.chrome.locator('.star-btn.is-on')).toBeVisible()
   await h.overlay.locator('button', { hasText: 'Remove' }).click()
-  await expect(h.chrome.locator('.fav-item', { hasText: 'Page B' })).toHaveCount(0)
+  await expect(h.chrome.locator(':is(.fav-item, .aq-fav)', { hasText: 'Page B' })).toHaveCount(0)
 })
 
 test('window.open becomes a tab that keeps its opener', async () => {
@@ -164,10 +164,10 @@ test('sleeping tabs wake up with back/forward history intact', async () => {
     w.tabById(id).sleep()
   }, first)
   await until(h.state, (s) => s.tabs[0].asleep)
-  await h.chrome.locator('.tab').first().click()
+  await h.chrome.locator(':is(.tab, .aq-tab)').first().click()
   await until(h.state, (s) => !s.tabs[0].asleep && s.tabs[0].title === 'Page B')
-  await expect(h.chrome.locator('.nav-orb.is-back')).toBeEnabled()
-  await h.chrome.click('.nav-orb.is-back')
+  await expect(h.chrome.locator('button[aria-label="Back"]')).toBeEnabled()
+  await h.chrome.click('button[aria-label="Back"]')
   await until(h.state, (s) => s.tabs[0].title === 'Page A')
 })
 
@@ -375,12 +375,12 @@ test('settings persist and are sanitized', async () => {
 
 test('app menu, spaces and Tab Flip open in the overlay', async () => {
   h = await launch()
-  await h.chrome.click('.orb-button')
+  await h.chrome.click(':is(.orb-button, .aq-orb)')
   await until(h.state, (s) => s.overlay === 'appmenu')
   await expect(h.overlay.locator('.am-item', { hasText: 'New InPrivate window' })).toBeVisible()
   await h.overlay.keyboard.press('Escape')
   await until(h.state, (s) => s.overlay === null)
-  await h.chrome.click('.space-gem')
+  await h.chrome.click(':is(.space-gem, .aq-space)')
   await until(h.state, (s) => s.overlay === 'spaces')
   await h.overlay.locator('button', { hasText: 'New space' }).click()
   await until(h.state, (s) => s.spaces === 2)
@@ -493,10 +493,10 @@ test('first run shows the splash and the Welcome Center once', async () => {
 test('the busy pointer shows while a page loads, then goes away', async () => {
   h = await launch()
   await omniboxGo(h, server.url('/slow'))
-  await expect(h.chrome.locator('.frame.is-busy')).toHaveCount(1)
+  await expect(h.chrome.locator(':is(.frame, .aq).is-busy')).toHaveCount(1)
   const page = await h.page(server.url('/slow'))
   await until(() => page.evaluate(() => getComputedStyle(document.body).cursor), (c) => c === 'progress')
-  await expect(h.chrome.locator('.frame.is-busy')).toHaveCount(0, { timeout: 8000 })
+  await expect(h.chrome.locator(':is(.frame, .aq).is-busy')).toHaveCount(0, { timeout: 8000 })
   await until(() => page.evaluate(() => getComputedStyle(document.body).cursor), (c) => c === 'auto')
 })
 
@@ -606,4 +606,64 @@ test('your own pictures and videos become new tab wallpapers', async () => {
   await ntp.locator('.wp-own-x').first().click()
   await expect(ntp.locator('.wp-own')).toHaveCount(1)
   expect(fs.readdirSync(dir).length).toBeLessThan(before)
+})
+
+// ---- the two looks -------------------------------------------------------------------------
+
+test('Aqua: tabs live in the sidebar, pinned ones become channels', async () => {
+  h = await launch()
+  await expect(h.chrome.locator('.aq')).toHaveCount(1)
+  await h.chrome.locator('.aq-newtab').click()
+  await expect(h.chrome.locator('.aq-tab')).toHaveCount(2)
+  // The page sits beside the sidebar, not under a tab strip.
+  const vp = await h.app.evaluate(() => [...(globalThis as any).__auralis.BrowserWin.all.values()][0].activeTab.view.getBounds())
+  expect(vp.x).toBeGreaterThan(200)
+  await h.app.evaluate(() => {
+    const w = [...(globalThis as any).__auralis.BrowserWin.all.values()][0]
+    w.setPinned(w.tabs[0], true)
+  })
+  await expect(h.chrome.locator('.aq-channel')).toHaveCount(1)
+  await expect(h.chrome.locator('.aq-tab')).toHaveCount(1)
+  await h.chrome.locator('.aq-tab .aq-tab-close').click()
+  await until(h.state, (s) => s.tabs.length === 1)
+})
+
+test('Aqua: the compact sidebar opens the address bar only when asked', async () => {
+  h = await launch()
+  await h.app.evaluate(() => (globalThis as any).__auralis.settings.set({ sidebarCompact: true }))
+  await expect(h.chrome.locator('.aq.is-compact')).toHaveCount(1)
+  await expect(h.chrome.locator('.omnibox-input')).toHaveCount(0)
+  await h.app.evaluate(() => {
+    const a = (globalThis as any).__auralis
+    a.runCommand([...a.BrowserWin.all.values()][0], 'focus-address')
+  })
+  await expect(h.chrome.locator('.omnibox-input')).toBeFocused()
+  await h.chrome.locator('.omnibox-input').fill(server.url('/a'))
+  await h.chrome.locator('.omnibox-input').press('Enter')
+  await until(h.state, (s) => s.tabs[0].title === 'Page A')
+})
+
+test('Aqua: the Auralis menu opens fully inside the window', async () => {
+  h = await launch()
+  await h.chrome.click('.aq-orb')
+  await until(h.state, (s) => s.overlay === 'appmenu')
+  await wait(600)
+  const fit = await h.overlay.evaluate(() => {
+    const p = document.querySelector('.ov-popup')!.getBoundingClientRect()
+    return { left: p.left, right: p.right, width: innerWidth }
+  })
+  expect(fit.left).toBeGreaterThanOrEqual(0)
+  expect(fit.right).toBeLessThanOrEqual(fit.width)
+})
+
+test('the Modern look is still there: tabs on top, glass toolbar', async () => {
+  h = await launch()
+  await h.app.evaluate(() => (globalThis as any).__auralis.settings.set({ uiStyle: 'modern' }))
+  await expect(h.chrome.locator('.frame .tabstrip .tab')).toHaveCount(1)
+  await expect(h.chrome.locator('.aq')).toHaveCount(0)
+  await omniboxGo(h, server.url('/b'))
+  await until(h.state, (s) => s.tabs[0].title === 'Page B')
+  const vp = await h.app.evaluate(() => [...(globalThis as any).__auralis.BrowserWin.all.values()][0].activeTab.view.getBounds())
+  expect(vp.x).toBeLessThan(40)
+  expect(vp.y).toBeGreaterThan(70)
 })

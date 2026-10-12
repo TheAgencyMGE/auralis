@@ -50,8 +50,30 @@ export function OverlayApp() {
     if (!el || msg?.modal) return
     const ro = new ResizeObserver(() => measure())
     ro.observe(el)
-    return () => ro.disconnect()
+    // Text grows a little when the rounded face finishes loading.
+    const onFonts = () => measure()
+    document.fonts.addEventListener('loadingdone', onFonts)
+    void document.fonts.ready.then(onFonts)
+    return () => {
+      ro.disconnect()
+      document.fonts.removeEventListener('loadingdone', onFonts)
+    }
   }, [msg, measure])
+
+  // Focusing a field inside an overflowing popup must never scroll the page sideways.
+  useEffect(() => {
+    const root = document.getElementById('root')
+    const reset = () => {
+      if (root && (root.scrollLeft || root.scrollTop)) root.scrollTo(0, 0)
+      if (document.documentElement.scrollLeft) document.documentElement.scrollLeft = 0
+    }
+    root?.addEventListener('scroll', reset)
+    document.addEventListener('focusin', reset)
+    return () => {
+      root?.removeEventListener('scroll', reset)
+      document.removeEventListener('focusin', reset)
+    }
+  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

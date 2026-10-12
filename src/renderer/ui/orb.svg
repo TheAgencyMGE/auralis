@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="o-body" cx="50%" cy="70%" r="65%">
+      <stop offset="0" stop-color="#3fd2ee"/>
+      <stop offset=".38" stop-color="#1182c9"/>
+      <stop offset=".78" stop-color="#0a4f95"/>
+      <stop offset="1" stop-color="#063a73"/>
+    </radialGradient>
+    <linearGradient id="o-ribbon-a" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c4ff6a" stop-opacity="0"/>
+      <stop offset=".22" stop-color="#a8ee50"/>
+      <stop offset=".6" stop-color="#52e0cf"/>
+      <stop offset="1" stop-color="#6fd4ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="o-ribbon-b" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8af4ff" stop-opacity="0"/>
+      <stop offset=".35" stop-color="#9df6ff"/>
+      <stop offset=".8" stop-color="#e2ffa8"/>
+      <stop offset="1" stop-color="#e2ffa8" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="o-glow" cx="50%" cy="100%" r="60%">
+      <stop offset="0" stop-color="#b9f6ff" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#b9f6ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="o-gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".92"/>
+      <stop offset=".55" stop-color="#ffffff" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="o-rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d6f3ff"/>
+      <stop offset=".5" stop-color="#1d5d9c"/>
+      <stop offset="1" stop-color="#8fe2ff"/>
+    </linearGradient>
+    <filter id="o-soft" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="2.2"/>
+    </filter>
+    <clipPath id="o-clip"><circle cx="32" cy="32" r="29"/></clipPath>
+  </defs>
+  <circle cx="32" cy="32" r="29.5" fill="url(#o-body)"/>
+  <g clip-path="url(#o-clip)">
+    <path d="M-2 44C10 30 22 41 33 33S52 18 68 26" fill="none" stroke="#7dffd8" stroke-width="9" stroke-linecap="round" opacity=".45" filter="url(#o-soft)"/>
+    <path d="M-2 44C10 30 22 41 33 33S52 18 68 26" fill="none" stroke="url(#o-ribbon-a)" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M-4 50C12 40 25 48 36 41S55 30 70 35" fill="none" stroke="url(#o-ribbon-b)" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+    <path d="M1 41.5C13 30 24 38 33 31S50 18 64 22" fill="none" stroke="#f1ffd9" stroke-width=".9" stroke-linecap="round" opacity=".75"/>
+    <ellipse cx="32" cy="61" rx="27" ry="15" fill="url(#o-glow)"/>
+  </g>
+  <ellipse cx="32" cy="17.5" rx="21.5" ry="13" fill="url(#o-gloss)"/>
+  <circle cx="32" cy="32" r="29.25" fill="none" stroke="url(#o-rim)" stroke-width="1.5"/>
+</svg>

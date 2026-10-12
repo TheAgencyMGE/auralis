@@ -205,7 +205,7 @@ export function StatusBar({ state, active }: { state: WindowState | null; active
 }
 
 /** Windows Media Player's mini mode, docked in the status bar. */
-function MiniPlayer({ tab }: { tab: TabState }) {
+export function MiniPlayer({ tab }: { tab: TabState }) {
   const m = tab.media!
   const label = [m.title || tab.title, m.artist].filter(Boolean).join(' — ')
   const control = (action: 'toggle' | 'back' | 'forward') => void call('media.control', tab.id, action)

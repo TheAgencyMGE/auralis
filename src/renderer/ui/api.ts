@@ -48,6 +48,7 @@ export function applyFrameTokens(s: Settings, root: HTMLElement = document.docum
   root.style.setProperty('--frame-tint', tint)
   root.style.setProperty('--frame-alpha', String(0.28 + (s.glassIntensity / 100) * 0.5))
   root.style.setProperty('--frame-solid', s.transparency ? '0' : '1')
+  root.dataset.ui = s.uiStyle
 }
 
 export function formatBytes(n: number): string {

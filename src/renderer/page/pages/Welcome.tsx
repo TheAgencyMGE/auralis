@@ -18,14 +18,14 @@ interface Tile {
 const TILES: Tile[] = [
   {
     id: 'import',
-    art: 'star',
+    art: 'favorites',
     title: 'Bring your favorites',
     blurb: 'Copy your bookmarks from another browser into Favorites. Nothing in the other browser is changed.',
     body: () => <ImportFavorites />
   },
   {
     id: 'wallpaper',
-    art: 'picture',
+    art: 'wallpaper',
     title: 'Choose a wallpaper',
     blurb: 'New tabs open on real footage or photography. Live wallpapers loop quietly and pause when you look away.',
     body: (s) => (
@@ -44,7 +44,7 @@ const TILES: Tile[] = [
   },
   {
     id: 'search',
-    art: 'magnifier',
+    art: 'search',
     title: 'Pick a search provider',
     blurb: 'What you type in the address bar that isn’t an address is searched with this provider.',
     body: (s) => (
@@ -60,7 +60,7 @@ const TILES: Tile[] = [
   },
   {
     id: 'color',
-    art: 'palette',
+    art: 'color',
     title: 'Color the glass',
     blurb: 'Tint the window frame. Turn transparency off for the opaque Aero Basic look.',
     body: (s) => (
@@ -89,9 +89,9 @@ const TILES: Tile[] = [
   },
   {
     id: 'startup',
-    art: 'bell',
+    art: 'sound',
     title: 'Startup sound and splash',
-    blurb: 'Auralis greets you with a wind chime and its globe when it starts. Turn either off here.',
+    blurb: 'Auralis greets you with a wind chime and its orb when it starts. Turn either off here.',
     body: (s) => (
       <>
         <label className="wc-choice">
@@ -107,7 +107,7 @@ const TILES: Tile[] = [
   },
   {
     id: 'default',
-    art: 'globe',
+    art: 'browser',
     title: 'Make Auralis your browser',
     blurb: 'Windows lets you choose your default browser in Settings. Pick Auralis under Default apps.',
     body: () => (
@@ -137,7 +137,7 @@ export default function Welcome() {
         </div>
       </header>
       <section className="wc-detail" aria-live="polite">
-        <img className="wc-detail-art" src={`/emoji/${tile.art}.webp`} width={64} height={64} alt="" />
+        <img className="wc-detail-art" src={`/art/icons/${tile.art}.webp`} width={64} height={64} alt="" />
         <div className="wc-detail-body">
           <h2>{tile.title}</h2>
           <p>{tile.blurb}</p>
@@ -148,7 +148,7 @@ export default function Welcome() {
       <nav className="wc-tiles" aria-label="Welcome Center tasks">
         {TILES.map((t) => (
           <button key={t.id} className={`wc-tile${t.id === picked ? ' is-on' : ''}`} aria-pressed={t.id === picked} onClick={() => setPicked(t.id)}>
-            <img src={`/emoji/${t.art}.webp`} width={40} height={40} alt="" />
+            <img src={`/art/icons/${t.art}.webp`} width={40} height={40} alt="" />
             <span>{t.title}</span>
           </button>
         ))}

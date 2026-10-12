@@ -1464,3 +1464,74 @@ kbd {
 .am-item .mi-accel {
   padding-left: 12px;
 }
+
+/* =====================================================================
+   Aqua popups: big soft corners, pill highlights, the rounded face.
+   ===================================================================== */
+
+:root[data-ui='aqua'] .ov-popup {
+  font-family: var(--font);
+}
+:root[data-ui='aqua'] .menu {
+  padding: 6px;
+}
+:root[data-ui='aqua'] .mi {
+  height: 32px;
+  padding: 0 12px 0 6px;
+  font-size: 13px;
+}
+:root[data-ui='aqua'] .mi-sep {
+  margin: 5px 10px;
+}
+/* The Auralis menu: white plastic, a bright sky column, rounded everything. */
+:root[data-ui='aqua'] .ov-appmenu {
+  border-color: rgba(90, 140, 190, 0.5);
+  border-radius: 22px;
+  padding: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #eef6fc 100%);
+}
+:root[data-ui='aqua'] .am-left {
+  border: 0;
+  border-radius: 16px 0 0 16px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #dbe6f0;
+}
+:root[data-ui='aqua'] .am-right {
+  border: 0;
+  border-radius: 0 16px 16px 0;
+}
+:root[data-ui='aqua'] .am-item {
+  height: 36px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+:root[data-ui='aqua'] .am-icon {
+  border-radius: 50%;
+}
+:root[data-ui='aqua'] .am-link {
+  height: 32px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+:root[data-ui='aqua'] .am-search {
+  border-radius: 16px;
+}
+:root[data-ui='aqua'] .am-power {
+  border-radius: 50%;
+}
+:root[data-ui='aqua'] .omni-row {
+  border-radius: 12px;
+  font-size: 13px;
+}
+:root[data-ui='aqua'] .toast {
+  border-radius: 20px;
+}
+:root[data-ui='aqua'] .preview,
+:root[data-ui='aqua'] .preview-shot {
+  border-radius: 14px;
+}
+:root[data-ui='aqua'] .flip-card,
+:root[data-ui='aqua'] .f3-card {
+  border-radius: 16px;
+}
