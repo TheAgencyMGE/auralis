@@ -545,14 +545,14 @@ function DownloadsPanel({ items }: { items: DownloadItemState[] }) {
                     <span style={{ width: `${pct * 100}%` }} />
                   </div>
                   <div className="dl-meta">
-                    {d.state === 'paused' ? 'Paused — ' : ''}
+                    {d.state === 'paused' ? 'Paused · ' : ''}
                     {formatBytes(d.received)}
                     {d.total > 0 ? ` of ${formatBytes(d.total)}` : ''}
                     {d.state === 'progressing' && d.speed > 0 ? `, ${formatBytes(d.speed)}/s` : ''}
                   </div>
                 </>
               ) : (
-                <div className="dl-meta">{d.state === 'completed' ? formatBytes(d.total || d.received) : d.state === 'cancelled' ? 'Canceled' : 'Failed — the connection was interrupted'}</div>
+                <div className="dl-meta">{d.state === 'completed' ? formatBytes(d.total || d.received) : d.state === 'cancelled' ? 'Canceled' : 'Failed: the connection was interrupted'}</div>
               )}
             </div>
             <div className="dl-actions">

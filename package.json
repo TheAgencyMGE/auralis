@@ -2,9 +2,9 @@
   "name": "auralis",
   "productName": "Auralis",
   "version": "1.0.0",
-  "description": "A Chromium browser from an alternate timeline where Windows Aero kept evolving.",
+  "description": "A web browser for Windows with the look of the Frutiger Aero years: glossy Aqua or Vista glass, live wallpapers, gadgets, Flip 3D, ad blocking and Chrome extensions.",
   "main": "out/main/index.js",
-  "author": "Auralis Project",
+  "author": "Ryan Panda",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -45,5 +45,23 @@
     "typescript": "5.9.3",
     "vite": "7.3.7",
     "vitest": "4.1.11"
-  }
+  },
+  "homepage": "https://theagencymge.github.io/auralis/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheAgencyMGE/auralis.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TheAgencyMGE/auralis/issues"
+  },
+  "keywords": [
+    "browser",
+    "web-browser",
+    "electron",
+    "windows",
+    "frutiger-aero",
+    "aero",
+    "vista",
+    "nostalgia"
+  ]
 }

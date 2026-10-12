@@ -445,7 +445,7 @@ test('the Sidebar docks beside the page and the page makes room', async () => {
 test('the mini player shows what a page is playing and pauses it', async () => {
   h = await launch()
   await omniboxGo(h, server.url('/media'))
-  await expect(h.chrome.locator('.mini-player')).toContainText('Test Tone — Auralis')
+  await expect(h.chrome.locator('.mini-player')).toContainText('Test Tone · Auralis')
   await h.chrome.locator('.mp-play').click()
   const page = await h.page(server.url('/media'))
   await until(() => page.evaluate(() => (document.getElementById('a') as HTMLAudioElement).paused), (p) => p === true)

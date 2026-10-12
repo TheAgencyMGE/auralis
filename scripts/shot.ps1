@@ -1,5 +1,5 @@
 # Captures the Auralis window (or the whole primary screen) to a PNG, including
-# the desktop acrylic behind it — what the user actually sees.
+# the desktop acrylic behind it, which is what the user actually sees.
 param([string]$Out = "shot.png", [string]$Title = "Auralis", [int]$ProcessId = 0)
 Add-Type -AssemblyName System.Drawing
 Add-Type @"

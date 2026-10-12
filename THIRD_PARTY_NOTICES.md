@@ -15,17 +15,17 @@ Used under the Unsplash License (https://unsplash.com/license): free to use,
 attribution appreciated, not to be sold unaltered or compiled into a competing
 photo service.
 
-- Meadow — Tali Despins — https://unsplash.com/photos/FQkQxgO9Kh8
-- Lagoon — Ibrahim Rifath — https://unsplash.com/photos/JgOlXp0Dlpc
-- Cumulus — Kumiko Shimizu — https://unsplash.com/photos/lNxMcE8mvIM
-- Deep Water — Sime Basioli — https://unsplash.com/photos/BRkikoNP0KQ
-- Dew — Elimende Inagella — https://unsplash.com/photos/lYj0dLgMHmA
-- Aurora — v2osk — https://unsplash.com/photos/Ovn1hyBge38
-- Reef — NEOM — https://unsplash.com/photos/bOMVTvE2QFU
-- Koi Pond — Anne Laure P — https://unsplash.com/photos/C4gUYeDV0Xo
-- Morning Grass — Aaron Burden — https://unsplash.com/photos/sI8V_ax011I
-- Butterfly — Erik Karits — https://unsplash.com/photos/E3TZQOWh8IA
-- Leaves — Kumiko Shimizu — https://unsplash.com/photos/Pxa0yJ2Elxc
+- Meadow by Tali Despins: https://unsplash.com/photos/FQkQxgO9Kh8
+- Lagoon by Ibrahim Rifath: https://unsplash.com/photos/JgOlXp0Dlpc
+- Cumulus by Kumiko Shimizu: https://unsplash.com/photos/lNxMcE8mvIM
+- Deep Water by Sime Basioli: https://unsplash.com/photos/BRkikoNP0KQ
+- Dew by Elimende Inagella: https://unsplash.com/photos/lYj0dLgMHmA
+- Aurora by v2osk: https://unsplash.com/photos/Ovn1hyBge38
+- Reef by NEOM: https://unsplash.com/photos/bOMVTvE2QFU
+- Koi Pond by Anne Laure P: https://unsplash.com/photos/C4gUYeDV0Xo
+- Morning Grass by Aaron Burden: https://unsplash.com/photos/sI8V_ax011I
+- Butterfly by Erik Karits: https://unsplash.com/photos/E3TZQOWh8IA
+- Leaves by Kumiko Shimizu: https://unsplash.com/photos/Pxa0yJ2Elxc
 
 ## Live wallpapers and aquarium footage (Pexels License)
 
@@ -33,20 +33,20 @@ Real video footage used under the Pexels License (https://www.pexels.com/license
 free to use, attribution appreciated, not to be sold unaltered or redistributed
 as stock footage.
 
-- Rolling Fields — Egor Kunovsky — https://www.pexels.com/video/3829702/
-- Bubbles — Kindel Media — https://www.pexels.com/video/8823625/
-- Sunbeams — James Cheney — https://www.pexels.com/video/2632737/
-- Dolphins — Nichola Peters — https://www.pexels.com/video/10802614/
-- Koi — Samuel Sobrinho — https://www.pexels.com/video/3582903/
-- Jellyfish — Chris Munnik — https://www.pexels.com/video/4805827/
-- Droplet — Pixabay — https://www.pexels.com/video/855494/
-- Northern Lights — Nico Becker — https://www.pexels.com/video/5600929/
-- Rain on Glass — Zuzanna Musial — https://www.pexels.com/video/5366344/
-- Wind Farm — Pixabay — https://www.pexels.com/video/855181/
-- City at Dusk — William Chen — https://www.pexels.com/video/14563249/
-- Rainforest Falls — Greg Benson — https://www.pexels.com/video/10761087/
-- School of Fish — Daniel Torobekov — https://www.pexels.com/video/5277924/
-- Aquarium gadget — Magda Ehlers — https://www.pexels.com/video/18900261/
+- Rolling Fields by Egor Kunovsky: https://www.pexels.com/video/3829702/
+- Bubbles by Kindel Media: https://www.pexels.com/video/8823625/
+- Sunbeams by James Cheney: https://www.pexels.com/video/2632737/
+- Dolphins by Nichola Peters: https://www.pexels.com/video/10802614/
+- Koi by Samuel Sobrinho: https://www.pexels.com/video/3582903/
+- Jellyfish by Chris Munnik: https://www.pexels.com/video/4805827/
+- Droplet by Pixabay: https://www.pexels.com/video/855494/
+- Northern Lights by Nico Becker: https://www.pexels.com/video/5600929/
+- Rain on Glass by Zuzanna Musial: https://www.pexels.com/video/5366344/
+- Wind Farm by Pixabay: https://www.pexels.com/video/855181/
+- City at Dusk by William Chen: https://www.pexels.com/video/14563249/
+- Rainforest Falls by Greg Benson: https://www.pexels.com/video/10761087/
+- School of Fish by Daniel Torobekov: https://www.pexels.com/video/5277924/
+- Aquarium gadget by Magda Ehlers: https://www.pexels.com/video/18900261/
 
 ## Data services
 
@@ -61,23 +61,23 @@ as stock footage.
 ## Icons, artwork and sounds
 
 - Interface icons: Fluent UI System Icons, Copyright (c) 2020 Microsoft
-  Corporation, MIT License — https://github.com/microsoft/fluentui-system-icons
+  Corporation, MIT License: https://github.com/microsoft/fluentui-system-icons
 - Illustrated icons (weather, folder, page headers, Welcome Center): Oxygen
-  icon theme, Copyright (c) the Oxygen Team / KDE, LGPL-3.0-or-later —
+  icon theme, Copyright (c) the Oxygen Team / KDE, LGPL-3.0-or-later:
   https://github.com/KDE/oxygen-icons
 - The Auralis orb logo and app icon are original to Auralis.
 - Fonts: M PLUS Rounded 1c (the Aqua look) and VT323 (gadget LCD readouts),
   both SIL Open Font License 1.1, bundled through Fontsource.
-- Sounds: Interface Sounds by Kenney (www.kenney.nl), CC0 1.0 —
+- Sounds: Interface Sounds by Kenney (www.kenney.nl), CC0 1.0:
   https://kenney.nl/assets/interface-sounds
 - Startup sound: "Wind chime small" by freesound_community, Pixabay Content
-  License — https://pixabay.com/sound-effects/film-special-effects-wind-chime-small-64660/ (trimmed
+  License: https://pixabay.com/sound-effects/film-special-effects-wind-chime-small-64660/ (trimmed
   to seven seconds)
-- Clock gadget: "Swiss railway clock" by Jahoe, Wikimedia Commons, CC BY-SA 3.0 —
+- Clock gadget: "Swiss railway clock" by Jahoe, Wikimedia Commons, CC BY-SA 3.0:
   https://commons.wikimedia.org/wiki/File:Swiss_railway_clock.svg (modified:
   ids on the hands, prefixed class names). The modified file,
   art/clock.svg, is available under the same license.
-- Feed icon: the Mozilla Foundation's feed icon, MPL 1.1 —
+- Feed icon: the Mozilla Foundation's feed icon, MPL 1.1:
   https://commons.wikimedia.org/wiki/File:Feed-icon.svg
 - Currency rates: Frankfurter (https://frankfurter.dev), European Central Bank
   reference rates.

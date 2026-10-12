@@ -3,7 +3,7 @@
 import { DatabaseSync } from 'node:sqlite'
 
 const MIGRATIONS: string[] = [
-  // v1 — initial schema
+  // v1: initial schema
   `
   CREATE TABLE urls (
     id INTEGER PRIMARY KEY,

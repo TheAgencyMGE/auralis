@@ -149,7 +149,7 @@ export class BrowserWin implements TabHost {
       minHeight: 380,
       show: false,
       frame: false,
-      title: this.incognito ? 'Auralis — InPrivate' : 'Auralis',
+      title: this.incognito ? 'Auralis (InPrivate)' : 'Auralis',
       backgroundColor: frameLook(s).color,
       backgroundMaterial: frameLook(s).material,
       roundedCorners: true,

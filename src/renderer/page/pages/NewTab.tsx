@@ -1,5 +1,5 @@
 // The new tab page: real photography, a search field, frequent sites, and
-// a Sidebar of gadgets on the right — Vista's desktop, as a start page.
+// a Sidebar of gadgets on the right, like Vista's desktop.
 import { useEffect, useMemo, useState } from 'react'
 import { ALL_WALLPAPER_IDS, NEW_GADGETS, NEW_WALLPAPERS, SEARCH_ENGINES, isFeedUrl, wallpaperInfo, type WallpaperId, type Settings } from '@shared/settings'
 import { call, useSettings } from '@ui/api'
