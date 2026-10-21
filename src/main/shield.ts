@@ -1,8 +1,9 @@
 // The Shield: one request pipeline per web session.
 //
 // Electron allows a single listener per webRequest event, so ad & tracker
-// blocking (Ghostery's engine, MPL-2.0), HTTPS-First upgrades and Global
-// Privacy Control all live here instead of competing for the hooks.
+// blocking (Ghostery's engine, MPL-2.0), HTTPS-First upgrades, Global
+// Privacy Control and the sign-in user agent all live here instead of
+// competing for the hooks.
 import { app, ipcMain, net, webContents, type Session, type IpcMainInvokeEvent } from 'electron'
 import { ElectronBlocker, fromElectronDetails } from '@ghostery/adblocker-electron'
 import fs from 'node:fs/promises'
@@ -11,6 +12,7 @@ import { settings, userFile } from './context'
 import { logger } from './log'
 import { siteKey, SCHEME } from '../shared/url'
 import { noteStopped, threatFor } from './safety'
+import { isSignInUrl, signInUserAgent } from './sign-in'
 
 const log = logger('shield')
 const ENGINE_FILE = () => userFile('shield-engine.bin')
@@ -149,6 +151,10 @@ export function installShield(ses: Session): void {
   ses.webRequest.onBeforeSendHeaders((details, callback) => {
     if (settings.get().globalPrivacyControl && /^https?:/.test(details.url)) {
       details.requestHeaders['Sec-GPC'] = '1'
+    }
+    // Google's sign-in page and everything it loads get the user agent it accepts.
+    if (isSignInUrl(details.url) || (details.resourceType !== 'mainFrame' && isSignInUrl(topUrlOf(details.webContentsId)))) {
+      details.requestHeaders['User-Agent'] = signInUserAgent()
     }
     callback({ requestHeaders: details.requestHeaders })
   })

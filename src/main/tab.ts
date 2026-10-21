@@ -5,7 +5,8 @@ import { WebContentsView, dialog, nativeImage, type BrowserWindowConstructorOpti
 import path from 'node:path'
 import { ctx, settings } from './context'
 import { blockedFor, resetBlocked, upgradedFrom, clearUpgrade, isShieldActiveFor } from './shield'
-import { certificateFor } from './web-session'
+import { certificateFor, cleanUserAgent } from './web-session'
+import { isSignInUrl, signInUserAgent } from './sign-in'
 import { clearStopped, stoppedNavigation, type Threat } from './safety'
 import { cachedThumb, saveThumb } from './thumbs'
 import { logger } from './log'
@@ -457,8 +458,15 @@ export class Tab {
       void this.detectFeeds()
       host.backgroundLoaded(this)
     })
+    // Scripts on Google's sign-in page see the same user agent as its requests.
+    const matchUserAgent = (url: string) => {
+      const ua = isSignInUrl(url) ? signInUserAgent() : cleanUserAgent()
+      if (wc.getUserAgent() !== ua) wc.setUserAgent(ua)
+    }
+    wc.on('did-redirect-navigation', (e) => e.isMainFrame && matchUserAgent(e.url))
     wc.on('did-start-navigation', (e) => {
       if (e.isMainFrame && !e.isSameDocument) {
+        matchUserAgent(e.url)
         this.readerable = false
         this.feeds = []
         this.media = null

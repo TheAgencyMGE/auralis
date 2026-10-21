@@ -58,6 +58,57 @@ function useVisibleInterval(fn: () => void, ms: number, deps: unknown[]): void {
 }
 
 /**
+ * Loads a gadget's data every `ms`. A failed load is tried again soon (30 s,
+ * doubling up to 5 minutes) and right away when the connection comes back or
+ * the page is shown again, so one hiccup at startup doesn't stick for long.
+ * Returns the latest result and a function to try again now.
+ */
+function useNetData<T>(load: () => Promise<T>, failed: (r: T) => boolean, ms: number, deps: unknown[]): [T | null, () => void] {
+  const [data, setData] = useState<T | null>(null)
+  const ref = useRef({ load, failed })
+  ref.current = { load, failed }
+  const run = useRef<() => void>(() => {})
+  useEffect(() => {
+    let alive = true
+    let retry = 0
+    let timer = 0
+    let busy = false
+    const go = () => {
+      if (busy) return
+      busy = true
+      window.clearTimeout(timer)
+      ref.current.load().then(
+        (r) => {
+          busy = false
+          if (!alive) return
+          setData(r)
+          const bad = ref.current.failed(r)
+          retry = bad ? retry + 1 : 0
+          timer = window.setTimeout(tick, bad ? Math.min(30_000 * 2 ** (retry - 1), 5 * 60_000) : ms)
+        },
+        () => {
+          busy = false
+          if (alive) timer = window.setTimeout(tick, 30_000)
+        }
+      )
+    }
+    const tick = () => (document.hidden ? (timer = window.setTimeout(tick, 30_000)) : go())
+    const wake = () => retry > 0 && !document.hidden && go()
+    run.current = go
+    go()
+    window.addEventListener('online', wake)
+    document.addEventListener('visibilitychange', wake)
+    return () => {
+      alive = false
+      window.clearTimeout(timer)
+      window.removeEventListener('online', wake)
+      document.removeEventListener('visibilitychange', wake)
+    }
+  }, deps) // eslint-disable-line react-hooks/exhaustive-deps
+  return [data, () => run.current()]
+}
+
+/**
  * A muted, looping video that only plays while the page is visible and the
  * user hasn't asked for reduced motion; otherwise its poster stands still.
  */
@@ -163,20 +214,16 @@ function SlideshowGadget() {
 const PER_PAGE = 4
 
 function HeadlinesGadget({ url }: { url: string }) {
-  const [feed, setFeed] = useState<Feed | null>(null)
-  const [error, setError] = useState(false)
   const [page, setPage] = useState(0)
   const [hover, setHover] = useState(false)
-  useVisibleInterval(
-    () =>
-      void call<{ text: string; url: string } | { error: string }>('feed.get', url).then((r) => {
-        const f = 'text' in r ? parseFeed(r.text, r.url) : null
-        setFeed(f)
-        setError(!f)
-      }),
+  const [result] = useNetData(
+    () => call<{ text: string; url: string } | { error: string }>('feed.get', url).then((r) => (('text' in r ? parseFeed(r.text, r.url) : null) ?? false)),
+    (f) => f === false,
     15 * 60_000,
     [url]
   )
+  const feed: Feed | null = result || null
+  const error = result === false
   const pages = feed ? Math.max(1, Math.ceil(Math.min(feed.items.length, 20) / PER_PAGE)) : 1
   useVisibleInterval(() => !hover && setPage((p) => p + 1), 9000, [hover])
   const p = page % pages
@@ -226,10 +273,9 @@ interface Rates {
 }
 
 function CurrencyGadget({ s }: { s: Settings }) {
-  const [rates, setRates] = useState<Rates | null>(null)
   const [amount, setAmount] = useState('1')
   const quotes = s.currencyQuotes
-  useVisibleInterval(() => void call<Rates>('currency.get').then(setRates), 60 * 60_000, [s.currencyBase, quotes.join()])
+  const [rates] = useNetData(() => call<Rates>('currency.get'), (r) => !!r.error, 60 * 60_000, [s.currencyBase, quotes.join()])
   const n = Number(amount.replace(',', '.'))
   const fmt = (code: string, v: number) => {
     try {
@@ -258,7 +304,7 @@ function CurrencyGadget({ s }: { s: Settings }) {
           </div>
         )
       })}
-      <div className="cur-note">{rates?.error ? 'Rates unavailable offline' : rates?.date ? `ECB reference rates, ${new Date(rates.date + 'T12:00').toLocaleDateString()}` : 'Loading rates…'}</div>
+      <div className="cur-note">{rates?.error ? (navigator.onLine ? 'Couldn’t reach the rates service. Trying again shortly.' : 'Rates unavailable offline') : rates?.date ? `ECB reference rates, ${new Date(rates.date + 'T12:00').toLocaleDateString()}` : 'Loading rates…'}</div>
     </section>
   )
 }
@@ -287,10 +333,10 @@ interface WeatherData {
 }
 
 function WeatherGadget({ settings }: { settings: Settings }) {
-  const [data, setData] = useState<WeatherData | null>(null)
   const [editing, setEditing] = useState(false)
-  useVisibleInterval(
-    () => void call<WeatherData>('weather.get').then(setData),
+  const [data, retry] = useNetData(
+    () => call<WeatherData>('weather.get'),
+    (r) => !!r.error,
     15 * 60_000,
     [settings.weatherLocation?.lat, settings.weatherLocation?.lon, settings.temperatureUnit]
   )
@@ -309,7 +355,12 @@ function WeatherGadget({ settings }: { settings: Settings }) {
   if (data.error || !data.current) {
     return (
       <section className="gadget weather">
-        <p className="gadget-msg">Weather is unavailable offline. It will refresh when you’re connected.</p>
+        <p className="gadget-msg">
+          {navigator.onLine ? 'Couldn’t reach the weather service. Trying again shortly.' : 'You’re offline. The weather will refresh when you’re connected.'}
+        </p>
+        <button className="gadget-retry" onClick={retry}>
+          Try again
+        </button>
       </section>
     )
   }

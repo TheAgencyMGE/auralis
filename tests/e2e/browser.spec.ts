@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
-import { fixtureServer, launch, omniboxGo, tempProfile, until, wait, type Harness } from './helpers'
+import { fixtureServer, launch, omniboxGo, tempProfile, until, wait, weather, type Harness } from './helpers'
 
 let server: Awaited<ReturnType<typeof fixtureServer>>
 let h: Harness
@@ -666,4 +666,22 @@ test('the Modern look is still there: tabs on top, glass toolbar', async () => {
   const vp = await h.app.evaluate(() => [...(globalThis as any).__auralis.BrowserWin.all.values()][0].activeTab.view.getBounds())
   expect(vp.x).toBeLessThan(40)
   expect(vp.y).toBeGreaterThan(70)
+})
+
+// ---- gadgets recover from a failed fetch --------------------------------------------------------
+
+test('the weather gadget recovers when the weather service fails at first', async () => {
+  h = await launch()
+  weather.failures = 1000
+  await h.app.evaluate((_e, base) => {
+    const a = (globalThis as any).__auralis
+    a.setWeatherServiceForTest(base)
+    a.settings.set({ weatherLocation: { name: 'Honolulu', lat: 21.3, lon: -157.85 }, widgets: { ...a.settings.get().widgets, weather: true } })
+  }, server.url(''))
+  const ntp = await h.page('auralis://newtab')
+  await expect(ntp.locator('.gadget.weather .gadget-msg')).toContainText('Couldn’t reach the weather service')
+  weather.failures = 0
+  await ntp.locator('.gadget.weather .gadget-retry').click()
+  await expect(ntp.locator('.gadget.weather .w-now')).toBeVisible()
+  await expect(ntp.locator('.gadget.weather')).toContainText('24')
 })

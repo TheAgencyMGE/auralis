@@ -9,6 +9,22 @@
   font-size: var(--fs-s);
   line-height: 1.45;
 }
+/* A small glass capsule under a gadget's error message. */
+.gadget-retry {
+  margin-top: 8px;
+  padding: 3px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  color: #fff;
+  font: inherit;
+  font-size: var(--fs-s);
+  text-shadow: 0 1px 1px rgba(0, 20, 45, 0.6);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.04) 51%, rgba(255, 255, 255, 0.2));
+  cursor: default;
+}
+.gadget-retry:hover {
+  box-shadow: 0 0 0 3px rgba(150, 220, 255, 0.45);
+}
 
 /* Weather: a blue glass gadget. */
 .weather {

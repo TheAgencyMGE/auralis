@@ -176,7 +176,8 @@ async function boot(): Promise<void> {
     const { runCommand } = await import('./commands')
     const extensions = await import('./extensions')
     const webStore = await import('electron-chrome-web-store')
-    Object.assign(globalThis, { __auralis: { BrowserWin, runCommand, ctx, settings, sleepIdleTabs, setSafetyListsForTest, extensions, webStore } })
+    const { setWeatherServiceForTest } = await import('./tools')
+    Object.assign(globalThis, { __auralis: { BrowserWin, runCommand, ctx, settings, sleepIdleTabs, setSafetyListsForTest, setWeatherServiceForTest, extensions, webStore } })
   }
 }
 

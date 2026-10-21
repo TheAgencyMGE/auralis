@@ -235,6 +235,28 @@ export async function thumbsFor(win: BrowserWin, allSpaces = false): Promise<Tab
 // ---- weather (Open-Meteo, CC BY 4.0) ----------------------------------------------------------
 
 const weatherCache = new Map<string, { at: number; data: unknown }>()
+let weatherService = 'https://api.open-meteo.com'
+/** Tests point the weather gadget at a local server. */
+export function setWeatherServiceForTest(base: string): void {
+  weatherService = base
+  weatherCache.clear()
+}
+
+/** GETs JSON for a gadget, giving up after 12 s and trying once more after a short pause. */
+async function fetchJson<T>(url: string): Promise<T> {
+  let last: unknown
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 1500))
+    try {
+      const res = await net.fetch(url, { signal: AbortSignal.timeout(12_000) })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return (await res.json()) as T
+    } catch (err) {
+      last = err
+    }
+  }
+  throw last
+}
 
 export async function weather(): Promise<unknown> {
   const loc = settings.get().weatherLocation
@@ -244,18 +266,16 @@ export async function weather(): Promise<unknown> {
   const hit = weatherCache.get(key)
   if (hit && Date.now() - hit.at < 15 * 60_000) return hit.data
   const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+    `${weatherService}/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
     `&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,relative_humidity_2m` +
     `&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=5` +
     (unit === 'f' ? '&temperature_unit=fahrenheit&wind_speed_unit=mph' : '')
   try {
-    const res = await net.fetch(url)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = { location: loc.name, unit, ...((await res.json()) as object) }
+    const data = { location: loc.name, unit, ...(await fetchJson<object>(url)) }
     weatherCache.set(key, { at: Date.now(), data })
     return data
   } catch (err) {
-    log.warn('weather failed', err)
+    log.warn('weather failed', new URL(url).host, err)
     return hit?.data ?? { error: 'offline' }
   }
 }
@@ -336,9 +356,9 @@ export async function currencyRates(base: string, quotes: string[]): Promise<unk
   const hit = rateCache.get(key)
   if (hit && Date.now() - hit.at < 60 * 60_000) return hit.data
   try {
-    const res = await net.fetch(`https://api.frankfurter.dev/v1/latest?base=${base}&symbols=${quotes.join(',')}`)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const json = (await res.json()) as { base: string; date: string; rates: Record<string, number> }
+    const json = await fetchJson<{ base: string; date: string; rates: Record<string, number> }>(
+      `https://api.frankfurter.dev/v1/latest?base=${base}&symbols=${quotes.join(',')}`
+    )
     const data = { base: json.base, date: json.date, rates: json.rates }
     rateCache.set(key, { at: Date.now(), data })
     return data

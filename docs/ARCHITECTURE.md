@@ -39,6 +39,8 @@ Electron allows one `webRequest` listener per event, so everything that inspects
 - Global Privacy Control headers.
 - Dangerous-site checks against community phishing and malware lists (malware-filter project). The lists download every 12 hours and are kept as sorted 64-bit hashes, so every check happens on your computer.
 
+Auralis sends Chromium's user agent without the Electron token, except on Google's sign-in page. There it keeps the token, because Google refuses sign-in from browsers that look like Chrome but don't pass Chrome's own checks (`src/main/sign-in.ts`).
+
 Pop-ups need a click or key press shortly before them, like in Chromium. Downloads get Windows' Mark of the Web.
 
 ## Extensions

@@ -91,9 +91,27 @@ export async function until<T>(fn: () => Promise<T>, ok: (v: T) => boolean, time
 
 const article = Array.from({ length: 14 }, (_, i) => `<p>Paragraph ${i + 1}. The glass was cool under the morning light, and the water beyond the hills held the sky in it. ${'Aero design leaned on light, depth and translucency to make software feel alive. '.repeat(3)}</p>`).join('')
 
+/** How many more times the fake weather service fails before it answers. */
+export const weather = { failures: 0 }
+
 const routes: Record<string, (req: http.IncomingMessage, res: http.ServerResponse) => void> = {
   '/a': (_q, r) => html(r, 'Page A', '<h1>Alpha</h1><p>Find the word needle here, and needle again.</p><a id="tob" href="/b">to b</a>'),
   '/b': (_q, r) => html(r, 'Page B', '<h1>Beta</h1>'),
+  // Open-Meteo stand-in: fails while weather.failures > 0, then answers.
+  '/v1/forecast': (_q, r) => {
+    if (weather.failures > 0) {
+      weather.failures--
+      r.writeHead(503)
+      return r.end('busy')
+    }
+    r.writeHead(200, { 'content-type': 'application/json' })
+    r.end(
+      JSON.stringify({
+        current: { temperature_2m: 24, apparent_temperature: 25, weather_code: 1, is_day: 1, wind_speed_10m: 9, relative_humidity_2m: 70 },
+        daily: { time: ['2026-10-21', '2026-10-22'], temperature_2m_max: [27, 26], temperature_2m_min: [21, 20], weather_code: [1, 2] }
+      })
+    )
+  },
   '/c': (_q, r) => html(r, 'Page C', '<h1>Gamma</h1>'),
   '/popup': (_q, r) =>
     html(r, 'Opener', `<button id="open" onclick="window.w = window.open('/child', 'pop', 'width=400,height=300')">open</button>
